@@ -29,7 +29,7 @@ Then press **CALIBRATE**. Full guide: [RUN_GURU_FAST.md](RUN_GURU_FAST.md).
 | Phase after CALIBRATE | all bands, all pairs within 1°; restart ≤ 0.55° |
 | Drift | up to ~8° in 16 min (thermal, LO cable) → CALIBRATE every 5–10 min |
 
-Details and every mistake + fix: [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md).
+Details and every mistake + fix: [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md). Current state and every stage as it happens: [docs/WORK_LOG.md](docs/WORK_LOG.md).
 
 ## Repository map
 
@@ -45,6 +45,7 @@ Details and every mistake + fix: [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.
 | `phase_table_*` , `twinrx_*.cfg` | phase tables (startup, last CALIBRATE) and calibration files |
 | `*_check.py`, `*_test.py`, `hop_blocks_selftest.py`, `gui_band_tour.py` | checks and the measurements behind every design decision |
 | `results/` | all measured results — index with each run's verdict: [results/README.md](results/README.md) |
+| `docs/WORK_LOG.md` | **live log**: current state + a dated entry for every stage (read this first) |
 | `docs/DEVELOPMENT_LOG.md` | requirement, stages, measurements, mistakes and fixes, open items |
 | `docs/lab_notes/` | hardware facts learned over the whole project ([index](docs/lab_notes/README.md)) |
 | `docs/radar2_git_history.txt` | full commit history of the lab repo |

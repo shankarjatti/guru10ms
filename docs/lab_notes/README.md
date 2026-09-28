@@ -14,6 +14,7 @@ why it matters and how to apply it.
 | [x310-rx-timestamp-2x-and-hop-timing](x310-rx-timestamp-2x-and-hop-timing.md) | radio-clock hopping rules, 2× packet timestamps, gr-uhd 180° flips, display spec |
 | [guru-known-good-sources](guru-known-good-sources.md) | which copies of the code were good or stale, and the backups |
 | [final-project-real-antennas](final-project-real-antennas.md) | final system uses antennas, not the HackRF; RTOS plan; open questions |
+| [feedback-keep-work-log-md](feedback-keep-work-log-md.md) | every stage goes into `docs/WORK_LOG.md` as it happens |
 | [feedback-permanent-real-solutions](feedback-permanent-real-solutions.md) | working rules: real measurements only, permanent fixes, stage updates |
 
 Paths in the notes (`~/radar2/guru/...`) are where the files were on the lab PC; in this
