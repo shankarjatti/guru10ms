@@ -27,6 +27,19 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 19:10 — user: "we are working with shared LO ... all LOs should be synchronized"
+* Ping-pong keeps the shared-LO rule: at every instant **all 4 channels use one and the same synthesiser**
+  (ch0/ch1 `external` via the cable, ch2/ch3 on board B, export follows ch2's source). The spare synthesiser
+  feeds no channel while it tunes; at the hop all 4 channels move to it together.
+* The two synthesisers never serve at the same time, so they do not need to be phase-locked to each other;
+  both run from the same reference clock. The inter-channel phase (chN − ch0) is what is measured, and the
+  common LO phase cancels in it.
+* What changes: the LO reaches each channel by a slightly different path from synth A (ch2's) than from
+  synth B (ch3's) → a phase table per (band, synth): with 3 bands and 2 synths the pattern repeats every
+  6 dwells → 6 table rows, CALIBRATE measures all 6.
+* Must be verified in the test: each (band, synth) state repeats its phase; no 180° states; the spare
+  synth's retuning does not leak into the active LO (spurs / phase disturbance during the dwell).
+
 ### 19:00 — user: switching must be below 5 ms — is it possible by code?
 * Answer: **not by making the retune faster** (the ~5.4–5.8 ms is the TwinRX synthesiser itself: ADF5355
   VCO auto-calibration + PLL lock, plus the SPI writes at 3 MHz, all executed in the radio's command queue —
