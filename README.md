@@ -1,3 +1,63 @@
+# guru10ms — USRP-2945 4-channel coherent receiver, 10 ms radio-clock hopping
+
+USRP-2945 (X310 + 2× TwinRX, 4 phase-coherent channels) hopping **2.4 → 5.2 → 5.8 GHz**.
+Each band gets **10 ms switching (LO relocks, samples discarded) + 10 ms dwell (samples used)**;
+one cycle = **60 ms**, scheduled on the X310's own clock, exact to the sample. All four channels
+are phase-corrected per band; CALIBRATE re-measures the table on the live system.
+A HackRF One is the bench test source (the final system receives through antennas).
+
+Saved working state of 2026-09-28 (lab PC `~/radar2`, git tag `guru10ms`, commit `d135177`).
+Everything here was measured on the real hardware; failed runs are kept with their results.
+
+## Quick start
+
+```bash
+source ~/gnuradio-3.8/setup_env.sh      # GNU Radio 3.8 + UHD 3.15 (environment/)
+./install_blocks.sh                     # build the C++ engine, install the blocks (guru closed)
+./run_hop.sh --fast                     # HackRF tone on 2.4 GHz, then the receiver GUI
+```
+
+Then press **CALIBRATE**. Full guide: [RUN_GURU_FAST.md](RUN_GURU_FAST.md).
+
+## Measured (2026-09-28)
+
+| | |
+|---|---|
+| Slot timing | 2,968 / 2,968 slots exact: dwell 10,000, switch 10,000, period 20,000 samples @ 1 MS/s |
+| 30 min GUI run | 90,005 / 90,008 slots used; 0 unlocked in > 100,000 slots |
+| LO lock after a timed tune | 5.40–5.84 ms (300 hops) — inside the 10 ms switching slot |
+| Phase after CALIBRATE | all bands, all pairs within 1°; restart ≤ 0.55° |
+| Drift | up to ~8° in 16 min (thermal, LO cable) → CALIBRATE every 5–10 min |
+
+Details and every mistake + fix: [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md).
+
+## Repository map
+
+| Path | What |
+|---|---|
+| `guru_fast.grc` / `guru_fast.py` | the 10 ms hopping flowgraph (GRC 3.8) |
+| `guru.grc` / `guru.py` | the original guru (10 s host-timed hopping) it was built from |
+| `oot/` | block sources + GRC `.yml`: `twinrx_radio_source` (radio-clock source), `hop_blocks` (band select, phase meter, tag rotator), `hop_calibrator`, `phase_correct_hopping`, `twinrx_hopping_source`, `twinrx_usrp_source` |
+| `oot/engine/` | C++ radio-clock engine `twinrx_engine.cpp`, `build.sh` |
+| `make_guru_fast.py` | generates `guru_fast.grc` from `guru.grc` (bands, dwell, switching time) |
+| `run_hop.sh`, `install_blocks.sh`, `RESTORE.sh` | run / install / restore (`RESTORE.sh --verify`, `--check`) |
+| `hackrf_tone_source.py`, `b210_tone_source.py` | lab transmitters (system GNU Radio 3.10, UDP control 127.0.0.1:5123) |
+| `phase_table_*` , `twinrx_*.cfg` | phase tables (startup, last CALIBRATE) and calibration files |
+| `*_check.py`, `*_test.py`, `hop_blocks_selftest.py`, `gui_band_tour.py` | checks and the measurements behind every design decision |
+| `results/` | all measured results — index with each run's verdict: [results/README.md](results/README.md) |
+| `docs/DEVELOPMENT_LOG.md` | requirement, stages, measurements, mistakes and fixes, open items |
+| `docs/lab_notes/` | hardware facts learned over the whole project ([index](docs/lab_notes/README.md)) |
+| `docs/radar2_git_history.txt` | full commit history of the lab repo |
+| `installed_snapshot/` | exactly what was installed in `~/gnuradio-3.8` (doa package incl. `.so` files, GRC blocks, `libgnuradio-doa.so`) |
+| `third_party/gr-doa/` | source of the gr-doa module + patch vs upstream ([README](third_party/README.md)) |
+| `environment/` | versions, network, `uhd_usrp_probe`, setup scripts ([README](environment/README.md)) |
+| `earlier_work/lo_sharing/` | the LO-sharing work before guru ([README](earlier_work/README.md)) |
+| `logs/` | logs of the last runs |
+| `*.png` (top) | diagrams: how it works, hop sequence, switching loop, results |
+| `SHA256SUMS` | checksum of every file (`./RESTORE.sh --verify`) |
+
+---
+
 # Guru: USRP-2945 4-Channel Coherent Receiver & Phase Alignment
 
 A GNU Radio flowgraph for the **USRP-2945** (X310 chassis + two TwinRX daughterboards)

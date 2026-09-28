@@ -1,0 +1,48 @@
+2026-Sep-28 17:02:20.722875,0x7d8e06b941c0,log.cpp:471,2,UHD,linux; GNU C++ version 11.4.0; Boost_107400; UHD_3.15.0.HEAD-0-gaea0e2de
+2026-Sep-28 17:02:21.391682,0x7d8e06b941c0,x300_impl.cpp:173,2,X300,X300 initialization sequence...
+2026-Sep-28 17:02:21.589005,0x7d8e06b941c0,x300_eth_mgr.cpp:721,2,X300,Maximum frame size: 1472 bytes.
+2026-Sep-28 17:02:22.560537,0x7d8e06b941c0,x300_impl.cpp:370,2,X300,Radio 1x clock: 200 MHz
+2026-Sep-28 17:02:22.571229,0x7d8e06b941c0,block_ctrl_base.cpp:56,2,0/DmaFIFO_0,Initializing block control (NOC ID: 0xF1F0D00000000000)
+2026-Sep-28 17:02:22.603480,0x7d8e06b941c0,dma_fifo_block_ctrl_impl.cpp:46,2,0/DmaFIFO_0,BIST passed (Throughput: 1302 MB/s)
+2026-Sep-28 17:02:22.645893,0x7d8e06b941c0,dma_fifo_block_ctrl_impl.cpp:46,2,0/DmaFIFO_0,BIST passed (Throughput: 1319 MB/s)
+2026-Sep-28 17:02:22.673977,0x7d8e06b941c0,block_ctrl_base.cpp:56,2,0/Radio_0,Initializing block control (NOC ID: 0x12AD100000000001)
+2026-Sep-28 17:02:22.710240,0x7d8e06b941c0,block_ctrl_base.cpp:56,2,0/Radio_1,Initializing block control (NOC ID: 0x12AD100000000001)
+2026-Sep-28 17:02:23.446299,0x7d8e06b941c0,block_ctrl_base.cpp:56,2,0/DDC_0,Initializing block control (NOC ID: 0xDDC0000000000000)
+2026-Sep-28 17:02:23.467939,0x7d8e06b941c0,block_ctrl_base.cpp:56,2,0/DDC_1,Initializing block control (NOC ID: 0xDDC0000000000000)
+2026-Sep-28 17:02:23.486115,0x7d8e06b941c0,block_ctrl_base.cpp:56,2,0/DUC_0,Initializing block control (NOC ID: 0xD0C0000000000000)
+2026-Sep-28 17:02:23.503539,0x7d8e06b941c0,block_ctrl_base.cpp:56,2,0/DUC_1,Initializing block control (NOC ID: 0xD0C0000000000000)
+2026-Sep-28 17:02:24.175193,0x7d8e06b941c0,x300_impl.cpp:452,3,X300,Cannot update master clock rate! X300 Series does not allow changing the clock rate during runtime.
+2026-Sep-28 17:02:25.255886,0x7d8e06b941c0,multi_usrp.cpp:617,2,MULTI_USRP,    1) catch time transition at pps edge
+2026-Sep-28 17:02:25.609597,0x7d8e06b941c0,multi_usrp.cpp:634,2,MULTI_USRP,    2) set times next pps (synchronously)
+2026-Sep-28 17:14:48.708937,0x77ace53bd1c0,log.cpp:471,2,UHD,linux; GNU C++ version 11.4.0; Boost_107400; UHD_3.15.0.HEAD-0-gaea0e2de
+2026-Sep-28 17:14:49.377642,0x77ace53bd1c0,x300_impl.cpp:173,2,X300,X300 initialization sequence...
+2026-Sep-28 17:14:49.574100,0x77ace53bd1c0,x300_eth_mgr.cpp:721,2,X300,Maximum frame size: 1472 bytes.
+2026-Sep-28 17:14:49.669676,0x77ace53bd1c0,x300_impl.cpp:370,2,X300,Radio 1x clock: 200 MHz
+2026-Sep-28 17:14:49.680343,0x77ace53bd1c0,block_ctrl_base.cpp:56,2,0/DmaFIFO_0,Initializing block control (NOC ID: 0xF1F0D00000000000)
+2026-Sep-28 17:14:49.712522,0x77ace53bd1c0,dma_fifo_block_ctrl_impl.cpp:46,2,0/DmaFIFO_0,BIST passed (Throughput: 1307 MB/s)
+2026-Sep-28 17:14:49.755010,0x77ace53bd1c0,dma_fifo_block_ctrl_impl.cpp:46,2,0/DmaFIFO_0,BIST passed (Throughput: 1314 MB/s)
+2026-Sep-28 17:14:49.783589,0x77ace53bd1c0,block_ctrl_base.cpp:56,2,0/Radio_0,Initializing block control (NOC ID: 0x12AD100000000001)
+2026-Sep-28 17:14:50.428362,0x77ace53bd1c0,block_ctrl_base.cpp:56,2,0/Radio_1,Initializing block control (NOC ID: 0x12AD100000000001)
+2026-Sep-28 17:14:51.432273,0x77ace53bd1c0,block_ctrl_base.cpp:56,2,0/DDC_0,Initializing block control (NOC ID: 0xDDC0000000000000)
+2026-Sep-28 17:14:51.453538,0x77ace53bd1c0,block_ctrl_base.cpp:56,2,0/DDC_1,Initializing block control (NOC ID: 0xDDC0000000000000)
+2026-Sep-28 17:14:51.471482,0x77ace53bd1c0,block_ctrl_base.cpp:56,2,0/DUC_0,Initializing block control (NOC ID: 0xD0C0000000000000)
+2026-Sep-28 17:14:52.412799,0x77ace53bd1c0,block_ctrl_base.cpp:56,2,0/DUC_1,Initializing block control (NOC ID: 0xD0C0000000000000)
+2026-Sep-28 17:14:53.083508,0x77ace53bd1c0,x300_impl.cpp:452,3,X300,Cannot update master clock rate! X300 Series does not allow changing the clock rate during runtime.
+2026-Sep-28 17:14:54.165758,0x77ace53bd1c0,multi_usrp.cpp:617,2,MULTI_USRP,    1) catch time transition at pps edge
+2026-Sep-28 17:14:54.594380,0x77ace53bd1c0,multi_usrp.cpp:634,2,MULTI_USRP,    2) set times next pps (synchronously)
+2026-Sep-28 17:18:17.316036,0x73d777f1e1c0,log.cpp:471,2,UHD,linux; GNU C++ version 11.4.0; Boost_107400; UHD_3.15.0.HEAD-0-gaea0e2de
+2026-Sep-28 17:18:17.987000,0x73d777f1e1c0,x300_impl.cpp:173,2,X300,X300 initialization sequence...
+2026-Sep-28 17:18:18.185588,0x73d777f1e1c0,x300_eth_mgr.cpp:721,2,X300,Maximum frame size: 1472 bytes.
+2026-Sep-28 17:18:18.355838,0x73d777f1e1c0,x300_impl.cpp:370,2,X300,Radio 1x clock: 200 MHz
+2026-Sep-28 17:18:18.378158,0x73d777f1e1c0,block_ctrl_base.cpp:56,2,0/DmaFIFO_0,Initializing block control (NOC ID: 0xF1F0D00000000000)
+2026-Sep-28 17:18:18.410413,0x73d777f1e1c0,dma_fifo_block_ctrl_impl.cpp:46,2,0/DmaFIFO_0,BIST passed (Throughput: 1309 MB/s)
+2026-Sep-28 17:18:18.452934,0x73d777f1e1c0,dma_fifo_block_ctrl_impl.cpp:46,2,0/DmaFIFO_0,BIST passed (Throughput: 1304 MB/s)
+2026-Sep-28 17:18:18.482622,0x73d777f1e1c0,block_ctrl_base.cpp:56,2,0/Radio_0,Initializing block control (NOC ID: 0x12AD100000000001)
+2026-Sep-28 17:18:18.522903,0x73d777f1e1c0,block_ctrl_base.cpp:56,2,0/Radio_1,Initializing block control (NOC ID: 0x12AD100000000001)
+2026-Sep-28 17:18:18.559815,0x73d777f1e1c0,block_ctrl_base.cpp:56,2,0/DDC_0,Initializing block control (NOC ID: 0xDDC0000000000000)
+2026-Sep-28 17:18:18.580169,0x73d777f1e1c0,block_ctrl_base.cpp:56,2,0/DDC_1,Initializing block control (NOC ID: 0xDDC0000000000000)
+2026-Sep-28 17:18:18.597091,0x73d777f1e1c0,block_ctrl_base.cpp:56,2,0/DUC_0,Initializing block control (NOC ID: 0xD0C0000000000000)
+2026-Sep-28 17:18:18.613458,0x73d777f1e1c0,block_ctrl_base.cpp:56,2,0/DUC_1,Initializing block control (NOC ID: 0xD0C0000000000000)
+2026-Sep-28 17:18:19.294551,0x73d777f1e1c0,x300_impl.cpp:452,3,X300,Cannot update master clock rate! X300 Series does not allow changing the clock rate during runtime.
+2026-Sep-28 17:18:20.374354,0x73d777f1e1c0,multi_usrp.cpp:617,2,MULTI_USRP,    1) catch time transition at pps edge
+2026-Sep-28 17:18:21.206477,0x73d777f1e1c0,multi_usrp.cpp:634,2,MULTI_USRP,    2) set times next pps (synchronously)

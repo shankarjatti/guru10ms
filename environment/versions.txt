@@ -1,0 +1,33 @@
+# Machine and toolchain, recorded 2026-09-28T18:15:07+05:30
+
+OS:        Ubuntu 22.04.5 LTS
+Kernel:    6.8.0-138-generic
+CPU:       12th Gen Intel(R) Core(TM) i5-12400F  (12 threads)
+RAM:       15Gi
+Python:    Python 3.10.12 (/usr/bin/python3)
+GNU Radio (3.8 env): v3.8.5.0-6-g57bd109d
+UHD (3.15 env):      UHD 3.15.0.HEAD-0-gaea0e2de
+UHD images dir:      Images directory: /home/shankar/uhd-3.15/share/uhd/images
+g++:       g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+numpy:     1.26.4
+PyQt5:     5.15.6
+System GNU Radio (HackRF side): 3.10.1.1
+
+## Network (X310 link)
+enp3s0           UP             192.168.10.1/24 
+mtu 1500
+
+## Kernel network buffers (UHD recv_buff_size needs these)
+net.core.rmem_max = 33554432
+net.core.wmem_max = 33554432
+net.core.rmem_default = 212992
+
+## Real-time limits for this user
+0
+(no /etc/security/limits.d/99-sdr-rt.conf -- rtprio not enabled)
+
+## CPU governor
+powersave
+
+## USB (HackRF)
+Bus 001 Device 006: ID 1d50:6089 OpenMoko, Inc. Great Scott Gadgets HackRF One SDR
