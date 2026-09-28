@@ -21,11 +21,27 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | 5 ms dwell, stage 1: measure the real LO lock time of our exact tune method (staggered + 2nd pass) to find the shortest safe switching time |
+| Next step | switching < 5 ms: ping-pong LO test (`pingpong_test.py`, to write): switch time, phase of all 4 channels vs current method, spare-LO lock in time, spurs |
 
 ---
 
 ## 2026-09-28
+
+### 19:00 — user: switching must be below 5 ms — is it possible by code?
+* Answer: **not by making the retune faster** (the ~5.4–5.8 ms is the TwinRX synthesiser itself: ADF5355
+  VCO auto-calibration + PLL lock, plus the SPI writes at 3 MHz, all executed in the radio's command queue —
+  UHD source `adf535x.cpp` waits `_wait_time_us` during autocal).
+* **Yes by a different method: ping-pong LOs** — Ettus's own `host/examples/twinrx_freq_hopping.cpp`
+  (default hop interval 5 ms): while one LO set receives, the spare LO set is tuned to the next band; at the
+  hop only the LO **source switch** flips (`internal` ↔ `companion`).
+* Our mapping: board B has two LO sets (ch2's, currently exported, and ch3's, currently idle because ch3 is
+  `companion`). UHD source `twinrx_experts.cpp` l.333–345: the exported LO **follows** the exporting
+  channel's source (ch2 `companion` → exports ch3's synth), so board A (`external`) follows the flip and all
+  4 channels stay on one LO.
+* Unknown until measured: switch time after the flip; whether the phase repeats (the 180° / wrong-state
+  problem of a single timed tune may come back); whether the spare LO locks within dwell + switch
+  (5 ms + 1 ms = 6 ms vs lock 5.4–5.84 ms single pass, 2nd pass unknown) → dwell 5 ms is at the edge;
+  spurs from the spare synth retuning during a dwell.
 
 ### 18:45 — user: move to 5 ms, solve the open problems during that work
 * User: "we need to move 1 more step like 5ms ... during that time only we'll solve these problems also".
