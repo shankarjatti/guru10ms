@@ -21,11 +21,25 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | Stage 1 of the receiver-100% plan: user runs the rtprio + CPU-performance commands, then a 30-min GUI soak vs the 3/90,008 baseline |
+| Next step | 5 ms dwell, stage 1: measure the real LO lock time of our exact tune method (staggered + 2nd pass) to find the shortest safe switching time |
 
 ---
 
 ## 2026-09-28
+
+### 18:45 — user: move to 5 ms, solve the open problems during that work
+* User: "we need to move 1 more step like 5ms ... during that time only we'll solve these problems also".
+* Facts that decide 5 ms (measured): LO lock after a **single** timed tune = 5.40–5.84 ms after T
+  (`timed_tune_20260928_122715.json`, 300 hops). Our phase-correct method adds a 2nd pass at S+3 ms;
+  its lock time has never been measured on its own (only "locked at S+7 ms" in > 100,000 slots).
+* So: **5 ms dwell is possible; 5 ms switching is not** with this tune (the LO is still unlocked at 5 ms).
+* The PC's time per slot shrinks (lock read at S+7 ms, next batch must be sent before the next S):
+  10/10 → 13 ms; 5 dwell/10 switch → 8 ms (worst send seen with GUI ~9 ms). So the real-time
+  settings (problem A) become required, not optional — they get solved inside the 5 ms work.
+* Plan: (1) measure lock time of the exact method → shortest safe switch; (2) rtprio + CPU performance;
+  (3) 5 ms dwell with that switch: exact-sample check, then 30-min GUI soak, target 0 dropped;
+  (4) drift + automatic recovery along the way. guru10ms stays untouched; work in `~/radar2/guru`,
+  save as `guru5ms` when verified.
 
 ### 18:35 — requirement: receiver side 100 % correct
 * User: "for testing only we are using hack rf ... i need receiver side should be 100% correct".
