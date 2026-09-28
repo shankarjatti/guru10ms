@@ -27,6 +27,22 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 19:20 — user: can both boards A and B be master (exporter) in ping-pong?
+* Today only B exports (ch0 `external`, ch1 `external`, ch2 `internal`+export, ch3 `companion`) because
+  **the A→B LO jumpers pass no LO** (measured 2026-09-19, twice, hours apart: ch0 as exporter → ch2/ch3 dead,
+  tone +1.2 / −1.1 dB). B→A works. Cause: that cable pair faulty, unseated, or wired out-to-out
+  (must be J3 OUT → J4 IN for LO1, J1 OUT → J2 IN for LO2). Known separately: RF A board has a 15.4 dB
+  amplitude imbalance (ch0 weak port), phase coherence fine.
+* Basic ping-pong does **not** need A as master: both synthesisers used are on board B.
+* If the A→B pair is repaired, both boards can be master → **4 synthesisers for 3 bands** → each band can
+  keep its **own synthesiser locked all the time** (no retune at all). Switch = only source/export switches;
+  dwell no longer limited by lock time; a synth that never retunes keeps its phase state → table per band.
+  Cost: each hop flips all 4 channels' sources and both boards' export at one radio time; A→B cable drift.
+  To be measured, not assumed.
+* Proposed order: (1) user checks the A→B jumpers (which connectors, seated); (2) `twinrx_lo_check.py
+  --lo-sources internal,companion,external,external` with ch0 exporting to confirm A→B carries LO;
+  (3) ping-pong test on board B (works with today's cabling); (4) if A→B works, the 4-synth fixed-LO test.
+
 ### 19:10 — user: "we are working with shared LO ... all LOs should be synchronized"
 * Ping-pong keeps the shared-LO rule: at every instant **all 4 channels use one and the same synthesiser**
   (ch0/ch1 `external` via the cable, ch2/ch3 on board B, export follows ch2's source). The spare synthesiser
