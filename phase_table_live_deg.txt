@@ -1,0 +1,7 @@
+# Measured (chN - ch0) in DEGREES by guru_fast's CALIBRATE, 2026-09-28 17:16:25.
+# Radio-clock hopping, lab tone parked on each band in turn.
+# Valid for THIS power session only.
+# freq_hz, ch1_deg, ch2_deg, ch3_deg
+2400000000, 176.2624, -86.3468, -167.5990
+5200000000, 111.6355, 72.5453, 36.9269
+5800000000, 82.6418, 155.5483, 174.9718
