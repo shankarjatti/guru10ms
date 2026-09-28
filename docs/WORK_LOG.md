@@ -21,11 +21,23 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | waiting for the user's next instruction |
+| Next step | Stage 1 of the receiver-100% plan: user runs the rtprio + CPU-performance commands, then a 30-min GUI soak vs the 3/90,008 baseline |
 
 ---
 
 ## 2026-09-28
+
+### 18:35 — requirement: receiver side 100 % correct
+* User: "for testing only we are using hack rf ... i need receiver side should be 100% correct".
+* Already true by design and measured: a dwell is used only if its band, LO lock and exact timing are
+  confirmed; everything else is discarded and counted. **No wrong number is ever shown.**
+* Not yet 100 %: (A) dropped dwells, 3 / 90,008 in the 30-min GUI soak (Linux late); (B) phase accuracy
+  between calibrations (drift up to ~8° / 16 min, receiver LO cable A↔B); (C) no automatic recovery
+  after lost samples (untested).
+* Plan proposed: Stage 1 timing (rtprio 95 + CPU `performance`, engine threads pinned to own cores;
+  target 0 dropped in 30 min). Stage 2 automatic resync after sample loss, tested by forcing a stall.
+  Stage 3 one-hour drift log with a fixed table → calibration interval from numbers; phase-stable LO
+  cable as the permanent fix (software cannot make a cable's thermal drift zero).
 
 ### 18:25 — work log started
 * User: "every time keep updating things on .md file ... some time we need to compact the session".
