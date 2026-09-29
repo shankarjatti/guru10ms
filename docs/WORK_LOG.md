@@ -21,7 +21,7 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | user: log out/in (rtprio 95 file is in place) + `sudo cpupower frequency-set -g performance`, run `cd ~/radar2/guru && ./run_hop.sh --burst`, CALIBRATE. For exactly 50.00 cycles: cable X310 REF OUT → HackRF CLKIN |
+| Next step | user: close guru_burst, connect **X310 REF OUT → HackRF CLKIN** (check the levels in both manuals), replug the HackRF USB; then I install the engine and verify ~0 ppm now and after 20+ min. Also: log out/in for rtprio |
 
 ---
 
@@ -37,6 +37,16 @@ decisions taken, and what comes next. Only measured facts; anything not verified
   interrupted): tap stderr and count TIMEOUT warnings per second; ≥ 3/s for 2 s → restart the stream.
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
+
+### 2026-09-29 16:45 — user's 16-min burst run; "in long run I should get 10 kHz and 50 cycles — root cause"
+* Screen: 81,756 slots, 81,751 used (4 late, 1 skipped, 0 unlocked), **5000 samples every dwell**, phases
+  +0.016/+0.029/+0.075°, but tone at 5.8 GHz **6,871.9 Hz → 34.36 cycles**. Still no rtprio (limit 0).
+* **Root cause: two free-running clocks.** Samples counted with the X310's reference, tone made with the HackRF's
+  crystal; they drifted −3.374 → −3.913 ppm = **0.54 ppm in 16 min** (3.1 kHz at 5.8 GHz). Software cannot fix that
+  without faking. **Fix: one clock — X310 REF OUT → HackRF CLKIN.** Engine now switches REF OUT on at every start
+  (lab `…`); screen shows the drift in ppm; meter log has time stamps + tone Hz per band.
+* To verify after the cable: `tone_freq_check.py --offset 10e3 --applied-ppm 0` must show ~0 ppm on all bands, and
+  again after 20+ min.
 
 ### 2026-09-29 16:25 — "LO lock not confirmed on every dwell"
 * That text appeared with **unlocked 0**: the unused dwells were **late** (PC, no rtprio), not LO failures — the
