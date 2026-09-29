@@ -38,6 +38,17 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
 
+### 2026-09-29 17:40–17:52 — every band, TX pure source: counters exact; 2.4 GHz tone lands at 0 Hz
+* User run 3.6 min: 17,989/17,995 used, 0 unlocked, 2.4 GHz tone +2,102…+2,217 Hz (TX clock), 5000 samples every dwell.
+* Counters: mid-burst readings were off (19,408,754 / 3,881 = 5000.97) → totals now published together per complete
+  burst: 20 random readings per band = **5000.000000** exactly.
+* 2.4 GHz showed −8,828 Hz = the HackRF carrier leak taken as the tone (real tone inside the ±2 kHz guard) → meter now
+  takes only the strongest line; inside the guard = NOT measured. Synthetic test passes.
+* Radio now: HackRF −3.8 ppm (all bands agree) → 2.4 GHz tone at **+835 Hz → NOT measured**, CAL refused; 5.2 GHz
+  −9,696 Hz (48.44 cycles), 5.8 GHz −12,053 Hz (60.23 cycles). With a pure-source TX, a 10 kHz offset cannot work on
+  every band without a shared clock. Options for the user: REF OUT → CLKIN cable (exact 10 kHz everywhere) or a larger
+  offset (e.g. 200 kHz).
+
 ### 2026-09-29 17:50 — DECISION: TX is only a source; everything measured on the RX
 * User's run: 19,400,000 samples / 3,880 dwells = 5,000; tone 9,970.2 Hz → 49.84 cycles counted (9,970.2 × 5 ms =
   49.85). Question "if the tone and cycles vary, how are the samples fixed at 5000?" → two clocks: samples = X310 ticks.
