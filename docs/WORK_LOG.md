@@ -38,6 +38,17 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
 
+### 2026-09-29 16:00–16:18 — "signal not clean, distorted" (5.8 GHz picture) → clean display
+* 5.2/5.8 GHz `tone_level_check` (HackRF VGA 47…27): no clipping (peak ≤ 0.125 FS), every line ≤ −37 dBc, but a
+  **flat noise floor ~22 dB below the tone** over the 300 kHz display band, constant with HackRF level, identical on
+  all channels = the HackRF's transmit noise (raw dwell: `results/raw_dwell_5800_20260929.png`). And 5.8 GHz arrives
+  ~16× stronger than 2.4 GHz → drawn off the fixed ±0.6 plot (looked cut/peaky).
+* Fix (lab `…` "clean display"): **±10 kHz zero-phase display filter around each dwell's tone, same filter on all
+  channels** (phase untouched; measurements unfiltered) + autoscale. Synthetic test: ripple 3.95 → 0.62 %, phases exact.
+* On the radio: CAL OK (worst window 0.05°), 3,632/3,632 slots, 0 late, 5,000 samples every dwell, clean sine at 2.4 and
+  5.8 GHz, phases ≤ 0.07° (`results/gui_burst_clean_*_20260929_1617.png`). Cycles 41.1 (5.8) / 45.9 (2.4): HackRF
+  drifted since its clock was last measured (my tests do not re-measure; `run_hop.sh --burst` does at each start).
+
 ### 2026-09-29 15:52–15:58 — quick verification (user: "check and verify fast")
 * Full GUI program on the radio (offscreen), right after the start-up clock measurement: **5000 samples = 5.000 ms
   exactly**, tone 9,935 → 10,047 Hz = **49.7 → 50.2 cycles**, slots 2,633/2,633 and 2,947/2,947 used, 0 late.
