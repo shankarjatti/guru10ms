@@ -21,7 +21,7 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | (1) HackRF watchdog fix (count Soapy `TIMEOUT`); (2) lock-time test of the current method → shortest safe switching (expected ~6–7 ms); (3) rtprio + CPU performance; (4) dwell 5 ms. **No ping-pong** (user decision 2026-09-29) |
+| Next step | user: enable real-time priority (`sudo` rtprio line, log out/in), then 30-min GUI run of `./run_hop.sh --burst` (target 0 late); guru_burst lives in `~/radar2/guru` (commit `03f222b`) |
 
 ---
 
@@ -37,6 +37,32 @@ decisions taken, and what comes next. Only measured facts; anything not verified
   interrupted): tap stderr and count TIMEOUT warnings per second; ≥ 3/s for 2 s → restart the stream.
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
+
+### 2026-09-29 12:25–13:05 — HackRF fix done; burst mode 5 ms ON / 7 ms switching built and measured
+* **HackRF watchdog** (`hackrf_tone_source.py`, lab commit `069cdba`): GR 3.10 prints the Soapy TIMEOUT
+  warning on **stdout**; the script's stdout/stderr now pass through a pipe that counts it (and forwards
+  everything, flushed at exit). ≥ 3/s for 2 s → restart. Test with the real GR logger: healthy 0 restarts,
+  1/s 0 restarts, 10/s → restart after 2 s.
+* **10 kHz tone tried and dropped** (user: "in continuous which method we are using follow same in burst").
+  Measured (`tone_freq_check.py`, results `tone_freq_20260929_12*.json`): the HackRF runs **−4.5 ppm** vs the
+  X310 (−10.9 kHz at 2.4 GHz, −26.3 kHz at 5.8 GHz), drifting 8.8 kHz while warming up → a +10 kHz tone
+  landed at −0.9 kHz on 2.4 GHz, on top of the receiver's 0 Hz leakage (which is *stronger* than the tone at
+  2.4 GHz). Back to 200 kHz. Real fix if 10 kHz is ever needed: X310 REF OUT → HackRF CLKIN.
+* **Burst mode** (lab commit `03f222b`, `~/radar2/guru/guru_burst.grc/.py`, `./run_hop.sh --burst`): engine
+  sends a timed NUM_SAMPS_AND_DONE per dwell (0.25 ms pre-roll + 5,000 samples), checks every burst's start
+  sample and length, puts it on the continuous timeline (zeros in gaps). Same chain/method as guru_fast;
+  lock read at 6.5 ms; averaging 20 dwells; rt_priority 90 requested. `burst=False` = old continuous mode
+  (regression: generated 10 ms flowgraph identical apart from the new params).
+* Measured on the radio (no rtprio, GRC + Chrome open):
+  * continuous CALIBRATE → table `phase_table_20260929_cont.txt` (2468/2468 slots, spread ≤ 0.13°)
+  * **burst VERIFY: 4,112/4,112 bursts exact, every dwell exactly 5,000 samples, 0 unlocked, all bands
+    ≤ 0.57°**; second run 2,360/2,360 exact, ≤ 1°
+  * continuous VERIFY right after: ≤ 0.80° → the burst residual is drift, burst = continuous phase
+  * **late: 598/4,112 (14.5 %) and 39/2,361 (1.65 %)** — timing record: UHD tune calls stall to ~6 ms
+    (typical 2.27 ms) while the budget after the 6.5 ms lock read is ~5.5 ms. PC, not radio. Needs rtprio.
+* Found: `~/radar2/guru/guru_fast.grc` was overwritten 2026-09-28 20:26 by a GRC save of an older version
+  (no phase meter, plots on other tabs). `guru_fast.py` unaffected; the good .grc is in git and in guru10ms.
+  Left as is — user to decide.
 
 ### 2026-09-29 — DECISION: no ping-pong; keep the current hardware setup
 * User: "no we'll not go with ping pong ... follow that same hardware setup, only B can be the master".

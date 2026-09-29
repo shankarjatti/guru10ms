@@ -42,6 +42,8 @@ try:
 except Exception:
     pass
 import argparse
+import atexit
+import os
 import socket
 import sys
 import threading
@@ -188,22 +190,112 @@ class ToneTX(gr.top_block):
         return g
 
 
-def watchdog(make_tb, state, stop, expected_rate):
+class TimeoutTap:
+    """Count the Soapy sink's TIMEOUT warnings as this process prints them.
+
+    In one kind of HackRF stall the sink keeps consuming samples and drops
+    them with "Soapy sink error: TIMEOUT", so nothing is transmitted while the
+    sample rate the watchdog measures stays normal (2026-09-28: 1387 TIMEOUTs,
+    no restart, NO TONE on the receiver). GNU Radio 3.10 prints that warning on
+    stdout, not through anything Python can hook, so the process's own stdout
+    and stderr are passed through a pipe that is read here and forwarded
+    unchanged to where they went before.
+    """
+    PATTERN = b"Soapy sink error: TIMEOUT"
+
+    def __init__(self, fds=(1, 2)):
+        self._lock = threading.Lock()
+        self._count = 0
+        self.broken = None
+        self._pumps = []
+        for fd in fds:
+            orig = os.dup(fd)
+            r, w = os.pipe()
+            os.dup2(w, fd)
+            os.close(w)
+            th = threading.Thread(target=self._pump, args=(fd, r, orig),
+                                  daemon=True)
+            th.start()
+            self._pumps.append((fd, orig, th))
+        # the pumps are daemon threads: at exit, whatever is still in a pipe
+        # (the last lines printed) would be lost without this
+        atexit.register(self.close)
+
+    def close(self):
+        """Put the original outputs back and forward everything still queued."""
+        for f in (sys.stdout, sys.stderr):
+            try:
+                f.flush()
+            except Exception:
+                pass
+        for fd, orig, th in self._pumps:
+            os.dup2(orig, fd)           # closes the pipe's write end -> EOF
+        for fd, orig, th in self._pumps:
+            th.join(2.0)
+
+    def _pump(self, fd, r, orig):
+        keep = len(self.PATTERN) - 1        # a match may straddle two reads
+        tail = b""
+        try:
+            while True:
+                chunk = os.read(r, 65536)
+                if not chunk:
+                    break
+                view = memoryview(chunk)
+                while view:
+                    view = view[os.write(orig, view):]
+                data = tail + chunk
+                n = data.count(self.PATTERN)
+                if n:
+                    with self._lock:
+                        self._count += n
+                    data = data[data.rfind(self.PATTERN) + len(self.PATTERN):]
+                tail = data[-keep:]
+        except Exception as e:
+            self.broken = "%s: %s" % (type(e).__name__, e)
+        finally:
+            # without this reader, every later write to fd would block on a
+            # full pipe; put the original back and let the watchdog say so
+            os.dup2(orig, fd)
+            if self.broken is None:
+                self.broken = "output pipe closed"
+
+    def take(self):
+        """TIMEOUT warnings seen since the last call."""
+        with self._lock:
+            n, self._count = self._count, 0
+        return n
+
+
+# a stalled stream prints TIMEOUT continuously; one retune can print a few
+TIMEOUTS_PER_S_STALLED = 3
+
+
+def watchdog(make_tb, state, stop, expected_rate, tap=None):
     """Restart the flowgraph if the transmit stream dies.
 
-    The HackRF's SoapySDR stream stalls after a few minutes of retuning: the
-    sink fills the log with TIMEOUT and never recovers by itself, so the tone
-    silently disappears while the process still looks healthy. Rebuilding the
-    flowgraph brings it back.
+    The HackRF's SoapySDR stream stalls after a few minutes of retuning and
+    never recovers by itself, so the tone silently disappears while the
+    process still looks healthy. It shows up in one of two ways: the sink stops
+    consuming (the sample rate collapses), or it keeps consuming and drops
+    everything with TIMEOUT warnings (the rate looks normal). Either one for
+    two seconds in a row restarts the flowgraph, which brings the tone back.
     """
     floor = expected_rate * 0.25
     bad = 0
     time.sleep(8.0)                     # let the first start settle
+    if tap is not None:
+        tap.take()
     while not stop.is_set():
         time.sleep(1.0)
         tb = state.get("tb")
         if tb is None:
             continue
+        timeouts = tap.take() if tap is not None else 0
+        if tap is not None and tap.broken and not state.get("tap_broken_said"):
+            state["tap_broken_said"] = True
+            print("[watchdog] TIMEOUT counter stopped (%s) -- a stall that keeps "
+                  "the sample rate normal will NOT be caught" % tap.broken)
         try:
             rate = tb.sample_rate_now()
         except Exception as e:
@@ -215,15 +307,23 @@ def watchdog(make_tb, state, stop, expected_rate):
                 print("[watchdog] cannot read the transmit rate (%s: %s) -- "
                       "a stalled stream will NOT be caught from here"
                       % (type(e).__name__, e))
-            continue
-        state["rate_read_failed"] = False
-        if rate < floor:
+            rate = None
+        else:
+            state["rate_read_failed"] = False
+        slow = rate is not None and rate < floor
+        dropping = timeouts >= TIMEOUTS_PER_S_STALLED
+        if slow or dropping:
             bad += 1
         else:
             bad = 0
         if bad >= 2:
-            print("\n[watchdog] transmit stream stalled (%.0f Sps, expected "
-                  "%.0f) -- restarting it" % (rate, expected_rate))
+            why = []
+            if slow:
+                why.append("%.0f Sps, expected %.0f" % (rate, expected_rate))
+            if dropping:
+                why.append("%d TIMEOUT warnings in the last second" % timeouts)
+            print("\n[watchdog] transmit stream stalled (%s) -- restarting it"
+                  % "; ".join(why))
             try:
                 tb.stop(); tb.wait()
             except Exception as e:
@@ -239,6 +339,8 @@ def watchdog(make_tb, state, stop, expected_rate):
                 print("[watchdog] restart failed: %s" % e)
             bad = 0
             time.sleep(8.0)
+            if tap is not None:
+                tap.take()              # warnings from the old stream
 
 
 def level_report(a, freq):
@@ -387,6 +489,8 @@ def main():
         sys.exit(f"backend '{a.backend}' is not available here "
                  f"(have: {', '.join(_BACKENDS)})")
 
+    # before the sink exists, so its first warning is already counted
+    tap = TimeoutTap() if a.radio == "hackrf" and a.backend == "soapy" else None
     tb = ToneTX(a)
     print("=" * 66)
     print(("B210" if a.radio == "b210" else "HackRF One") +
@@ -428,7 +532,7 @@ def main():
         return fresh
 
     threading.Thread(target=watchdog,
-                     args=(_make, state, stop, a.rate), daemon=True).start()
+                     args=(_make, state, stop, a.rate, tap), daemon=True).start()
 
     th = None
     if a.control.lower() != "none":
