@@ -21,7 +21,7 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | user: close guru_burst, connect **X310 REF OUT → HackRF CLKIN** (check the levels in both manuals), replug the HackRF USB; then I install the engine and verify ~0 ppm now and after 20+ min. Also: log out/in for rtprio |
+| Next step | user: close guru_burst, `./install_blocks.sh && ./run_hop.sh --burst`, CALIBRATE; cable X310 REF OUT → HackRF CLKIN for exactly 10 kHz / 50 cycles; log out/in for rtprio |
 
 ---
 
@@ -37,6 +37,14 @@ decisions taken, and what comes next. Only measured facts; anything not verified
   interrupted): tap stderr and count TIMEOUT warnings per second; ≥ 3/s for 2 s → restart the stream.
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
+
+### 2026-09-29 17:50 — DECISION: TX is only a source; everything measured on the RX
+* User's run: 19,400,000 samples / 3,880 dwells = 5,000; tone 9,970.2 Hz → 49.84 cycles counted (9,970.2 × 5 ms =
+  49.85). Question "if the tone and cycles vary, how are the samples fixed at 5000?" → two clocks: samples = X310 ticks.
+* User: "everything should be calculated from the RX side; TX side is just a source" → the HackRF clock correction
+  (fed back from RX to TX) is removed (lab `…`). HackRF sends plain 10 kHz; RX measures wherever it lands (≈ +3 kHz on
+  2.4 GHz, ≈ −6 kHz on 5.8 GHz at −2.8 ppm); meters search both sides of 0 Hz. 50 cycles exactly only with the
+  REF OUT → CLKIN cable. Not yet run on the radio (user's GUI running).
 
 ### 2026-09-29 17:40 — counters made independent; tone + cycles back on screen
 * User restarted with run_hop --burst: transmitter v2 reports `ppm=-3.2186` (measured at start by asking it) — correct.
