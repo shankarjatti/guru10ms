@@ -38,6 +38,13 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
 
+### 2026-09-29 — user: does it work for a circular array too?
+* Yes: the receiver, hopping and ping-pong do not depend on antenna layout. What changes is the DF maths:
+  circular-array (UCA) steering vector a_n(θ) = exp(j·2π·R/λ·cos(θ − 2πn/4)), per band λ; gr-doa has only
+  linear-array MUSIC → write UCA MUSIC ourselves. Pilot-at-known-angle antenna calibration is general.
+* 4-element UCA, neighbour spacing d = R·√2 ≤ λ/2 → R ≤ λ/(2√2): 4.42 cm (2.4), 2.04 cm (5.2),
+  1.83 cm (5.8 GHz) (calculated, not measured). Gives 360° azimuth; up to 3 sources; no elevation.
+
 ### 2026-09-29 — user: "ping-pong works only for linear array, 180° search?"
 * Answered: no — the linear array / 0–180° limit belongs to AN-244's MUSIC direction finding (a linear
   array cannot tell front from back). Ping-pong is only an LO/tuning method (from a different Ettus
