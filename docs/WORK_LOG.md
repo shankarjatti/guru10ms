@@ -38,6 +38,13 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
 
+### 2026-09-29 17:40 — counters made independent; tone + cycles back on screen
+* User restarted with run_hop --burst: transmitter v2 reports `ppm=-3.2186` (measured at start by asking it) — correct.
+* User: "samples and dwells … calculate independently; tone frequency and cycles need real-time update". Engine now
+  keeps two separate counters (dwell samples added packet by packet, pre-roll excluded; +1 per complete burst); screen
+  line 1 = those, line 2 = tone Hz + cycles counted on the last dwell (lab `…`). Not yet run on the radio (user's GUI
+  was running).
+
 ### 2026-09-29 17:25–17:35 — 87.75 cycles on the user's screen = my bug; bottom line simplified
 * User's run: tone 17,549 Hz = 87.75 cycles; screen said clock "now −3.271 ppm (−6.417 at start)". Cause (mine): I had
   restarted the HackRF by hand with `--ppm 0`; `run_hop` kept it, and its start-up measurement ASSUMED the correction in
