@@ -14,14 +14,14 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 | | |
 |---|---|
-| Working system | guru_fast — 2.4 → 5.2 → 5.8 GHz, 10 ms switch + 10 ms dwell, 60 ms cycle, radio clock |
+| Working system | guru_burst (lab `~/radar2/guru`): 2.4 → 5.2 → 5.8 GHz, 7 ms switch + 5 ms dwell, 36 ms cycle, burst mode, 2 MS/s, 200 kHz HackRF tone (pure source). guru_fast 10/10 ms still available |
 | Code on the lab PC | `~/radar2/guru10ms/` (this repo, pushed) and `~/radar2/guru/` (same code; lab git repo `~/radar2`, tag `guru10ms` = `d135177`) |
 | GitHub | https://github.com/shankarjatti/guru10ms (public, branch `main`) |
 | Backups | `~/radar2/guru10ms.tar.gz`, `~/radar2/BACKUP_FAST_2026-09-28/` (+ `.tar.gz`), `~/radar2/BACKUP_WORKING_2026-09-28/` (10 s guru) |
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | user: close guru_burst, `./install_blocks.sh && ./run_hop.sh --burst`, CALIBRATE; cable X310 REF OUT → HackRF CLKIN for exactly 10 kHz / 50 cycles; log out/in for rtprio |
+| Next step | user: log out/in (rtprio) → 30-min run of `./run_hop.sh --burst` with CALIBRATE; optional REF OUT → CLKIN cable (removes HackRF drift) |
 
 ---
 
@@ -37,6 +37,14 @@ decisions taken, and what comes next. Only measured facts; anything not verified
   interrupted): tap stderr and count TIMEOUT warnings per second; ≥ 3/s for 2 s → restart the stream.
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
+
+### 2026-09-29 17:55–18:00 — DECISION: 200 kHz tone, 2 MS/s; burst mode works on every band
+* User: "use 200k only, and 2 MHz sample rate". Lab `…`: guru_burst at 2 MS/s (dwell 10,000 samples), HackRF plain
+  200 kHz (pure source), close-up waveform view + autoscale.
+* Measured on the radio: CAL OK (worst window 0.05°); tone +190.8 / +180.2 / +177.9 kHz on 2.4 / 5.2 / 5.8 GHz
+  (HackRF −3.8 ppm); 953.8 / 901.0 / 889.3 cycles counted; **samples / dwells = 10,000.000 exactly** (every reading);
+  phases ≤ 0.1°; 5,630/5,632 slots (2 late, no rtprio); 0 unlocked; 0 overflow. Pictures
+  `results/gui_burst_2Msps_200k_*MHz_20260929_1758.png`.
 
 ### 2026-09-29 17:40–17:52 — every band, TX pure source: counters exact; 2.4 GHz tone lands at 0 Hz
 * User run 3.6 min: 17,989/17,995 used, 0 unlocked, 2.4 GHz tone +2,102…+2,217 Hz (TX clock), 5000 samples every dwell.
