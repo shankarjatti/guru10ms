@@ -21,7 +21,7 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | (1) HackRF watchdog fix: count Soapy `TIMEOUT` warnings, not only the sample rate (not applied yet); (2) lock-time test for 6-7 ms switching; (3) ping-pong test |
+| Next step | (1) HackRF watchdog fix (count Soapy `TIMEOUT`); (2) lock-time test of the current method → shortest safe switching (expected ~6–7 ms); (3) rtprio + CPU performance; (4) dwell 5 ms. **No ping-pong** (user decision 2026-09-29) |
 
 ---
 
@@ -37,6 +37,13 @@ decisions taken, and what comes next. Only measured facts; anything not verified
   interrupted): tap stderr and count TIMEOUT warnings per second; ≥ 3/s for 2 s → restart the stream.
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
+
+### 2026-09-29 — DECISION: no ping-pong; keep the current hardware setup
+* User: "no we'll not go with ping pong ... follow that same hardware setup, only B can be the master".
+* Fixed from now on: ch0 `external`, ch1 `external`, ch2 `internal` + export (the one synthesiser),
+  ch3 `companion`; cables B J3→A J4, B J1→A J2; one synthesiser retunes at every hop.
+* Consequence: switching cannot be shorter than that synthesiser's lock (5.40–5.84 ms single tune; locked
+  by 7 ms with our 2nd pass) → realistic minimum ~6–7 ms, to be measured. Dwell 5 ms is possible.
 
 ### 2026-09-29 — user: does it work for a circular array too?
 * Yes: the receiver, hopping and ping-pong do not depend on antenna layout. What changes is the DF maths:
