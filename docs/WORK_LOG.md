@@ -21,11 +21,29 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | switching < 5 ms: ping-pong LO test (`pingpong_test.py`, to write): switch time, phase of all 4 channels vs current method, spare-LO lock in time, spurs |
+| Next step | (1) HackRF watchdog fix: count Soapy `TIMEOUT` warnings, not only the sample rate (not applied yet); (2) lock-time test for 6-7 ms switching; (3) ping-pong test |
 
 ---
 
 ## 2026-09-28
+
+### 2026-09-28 20:00 — run of guru10ms; HackRF stalled; watchdog blind to it
+* User ran `~/radar2/guru10ms/run_hop.sh --fast --restart` (my background start exited without a message;
+  `import guru_fast` works — likely no GUI from my shell). Screen: SCHEDULE 8021 slots, 8020 used, 1 late,
+  0 unlocked; LO LOCK all dwells; LAB TONE 5.2 GHz → **NO TONE (0/8 dwells)**, receiver OK.
+* `/tmp/hackrf_tone.log`: **1387 × `Soapy sink error: TIMEOUT`, no `[watchdog]` line.** Cause: in this
+  stall the gr-soapy sink keeps consuming samples (drops them with TIMEOUT), so `probe_rate` stays
+  normal and the watchdog (rate < 25 % for 2 s) never fires. Fix designed, **not applied** (user
+  interrupted): tap stderr and count TIMEOUT warnings per second; ≥ 3/s for 2 s → restart the stream.
+* Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
+  19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
+
+### 2026-09-29 — user: "ping-pong works only for linear array, 180° search?"
+* Answered: no — the linear array / 0–180° limit belongs to AN-244's MUSIC direction finding (a linear
+  array cannot tell front from back). Ping-pong is only an LO/tuning method (from a different Ettus
+  example, one channel, spectrum sweep) and does not depend on antenna geometry. 360° needs a circular
+  array + our own steering vectors (gr-doa implements linear arrays only). With 3 bands one spacing
+  cannot be λ/2 for all: λ/2 = 6.25 cm (2.4), 2.88 cm (5.2), 2.58 cm (5.8 GHz).
 
 ### 19:20 — user: can both boards A and B be master (exporter) in ping-pong?
 * Today only B exports (ch0 `external`, ch1 `external`, ch2 `internal`+export, ch3 `companion`) because
