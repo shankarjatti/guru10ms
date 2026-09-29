@@ -38,6 +38,16 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
 
+### 2026-09-29 17:05–17:20 — live sample counts; HackRF unplugged; CLKIN not in effect yet
+* DWELL CHECK now live (10×/s): dwell number, samples counted between its marks + min/max of last 200, the radio's
+  own burst count (5,250 = 250 pre-roll + 5,000) with its X310 time stamp, cycles COUNTED from the signal's rotation.
+  Test: a 4,990-sample window is reported as 4,990. Radio: #1394 5000 [5000..5000].
+* HackRF USB was unplugged (user, for the CLKIN cable): the new watchdog saw it (10 TIMEOUT/s) but its one restart
+  failed ("No such device") and it never retried → fixed: retries every 3 s. Tone source restarted with `--ppm 0`.
+* Measured with no correction: HackRF **−2.810 ppm** vs X310 on all bands → not running from the X310's clock yet.
+  UHD turns X310 REF OUT on by default at every open (and the engine forces it) → cable not connected yet, or HackRF
+  not accepting the level. Waiting for the user.
+
 ### 2026-09-29 16:45 — user's 16-min burst run; "in long run I should get 10 kHz and 50 cycles — root cause"
 * Screen: 81,756 slots, 81,751 used (4 late, 1 skipped, 0 unlocked), **5000 samples every dwell**, phases
   +0.016/+0.029/+0.075°, but tone at 5.8 GHz **6,871.9 Hz → 34.36 cycles**. Still no rtprio (limit 0).

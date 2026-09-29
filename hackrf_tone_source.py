@@ -344,14 +344,22 @@ def watchdog(make_tb, state, stop, expected_rate, tap=None):
             except Exception as e:
                 print("[watchdog] stopping the stalled stream failed: %s" % e)
             time.sleep(1.0)
-            try:
-                new = make_tb()
-                new.start()
-                state["tb"] = new
-                print("[watchdog] transmitter restarted on %.4f GHz"
-                      % (new.get_freq() / 1e9))
-            except Exception as e:
-                print("[watchdog] restart failed: %s" % e)
+            # keep trying until the radio is back (e.g. its USB was unplugged):
+            # a failed restart must never leave a dead stream nobody watches
+            attempt = 0
+            while not stop.is_set():
+                attempt += 1
+                try:
+                    new = make_tb()
+                    new.start()
+                    state["tb"] = new
+                    print("[watchdog] transmitter restarted on %.4f GHz (attempt %d)"
+                          % (new.get_freq() / 1e9, attempt))
+                    break
+                except Exception as e:
+                    print("[watchdog] restart attempt %d failed: %s -- NOT TRANSMITTING, "
+                          "retrying in 3 s" % (attempt, e))
+                    time.sleep(3.0)
             bad = 0
             time.sleep(8.0)
             if tap is not None:
