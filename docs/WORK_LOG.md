@@ -38,6 +38,11 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
 
+### 2026-09-29 16:25 — "LO lock not confirmed on every dwell"
+* That text appeared with **unlocked 0**: the unused dwells were **late** (PC, no rtprio), not LO failures — the
+  message lumped both. Now per band: `used N/M (not used: x not locked, y late, …)` and the SHOWING line names the
+  reason (lab `8739f10`). The LO lock check itself: `lo_locked` read on ch2 at 6.5 ms, before the first used sample.
+
 ### 2026-09-29 16:00–16:18 — "signal not clean, distorted" (5.8 GHz picture) → clean display
 * 5.2/5.8 GHz `tone_level_check` (HackRF VGA 47…27): no clipping (peak ≤ 0.125 FS), every line ≤ −37 dBc, but a
   **flat noise floor ~22 dB below the tone** over the 300 kHz display band, constant with HackRF level, identical on
