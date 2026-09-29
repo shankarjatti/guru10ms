@@ -38,6 +38,15 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
 
+### 2026-09-29 15:52–15:58 — quick verification (user: "check and verify fast")
+* Full GUI program on the radio (offscreen), right after the start-up clock measurement: **5000 samples = 5.000 ms
+  exactly**, tone 9,935 → 10,047 Hz = **49.7 → 50.2 cycles**, slots 2,633/2,633 and 2,947/2,947 used, 0 late.
+* Raw phases changed since 13:28 (e.g. 2.4 GHz ch1−ch0 172.2° → −45.5°) after my test tools re-opened the X310 →
+  CALIBRATE after every start stays mandatory.
+* CALIBRATE was REJECTED (0.64–0.77°): it started while the HackRF still sent its old buffered baseband. Calibrator
+  now waits 1.5 s + 5 dwells of a steady tone (lab `…` hop_calibrator). Next run: CAL OK (worst window 0.78°).
+  ch2 spread in the GUI 0.16–0.26° (ch1/ch3 0.02°) — near the 0.3° limit; not loosened.
+
 ### 2026-09-29 15:45–15:52 — "why distorted / not continuous / why more than 50 cycles"
 * User's screen: zoomed plot (troughs outside the zoom box = "not continuous"), not calibrated (−59°), 51.26 cycles.
 * `tone_level_check.py` (HackRF VGA 14→30 dB, signal +16 dB): SNR in the 300 kHz display band stays **~28 dB** on all
