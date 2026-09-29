@@ -38,6 +38,18 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
 
+### 2026-09-29 15:45–15:52 — "why distorted / not continuous / why more than 50 cycles"
+* User's screen: zoomed plot (troughs outside the zoom box = "not continuous"), not calibrated (−59°), 51.26 cycles.
+* `tone_level_check.py` (HackRF VGA 14→30 dB, signal +16 dB): SNR in the 300 kHz display band stays **~28 dB** on all
+  channels → the wobble scales with the signal. Residual after an ideal sine: **coherence 0.991–0.996 between
+  channels**; receiver's own noise (HackRF moved away) **31–45 dB** below the tone → the wobble is **in the HackRF's
+  signal** (phase/frequency noise; 96.6 % within 1 kHz of the tone = its drift), identical on all channels, so it
+  cancels in chN − ch0 (phase spread 0.03–0.1°). Receiver does not distort. VGA left at 14.
+* **More than 50 cycles:** HackRF clock vs X310 drifted **−4.5 → −5.2 → −3.2 ppm** today; with a stored correction the
+  10 kHz tone landed at up to 14.5 kHz (72 cycles). `run_hop.sh --burst` now measures and applies the clock error at
+  every start (`tone_freq_check --set-live`): right after it 9,960 / 9,856 / 9,780 Hz = **49.8 / 49.3 / 48.9 cycles**.
+  It keeps drifting afterwards (shown per dwell). Exactly 50.00 for good: **X310 REF OUT → HackRF CLKIN**.
+
 ### 2026-09-29 13:10–13:40 — 10 kHz tone in burst mode: whole 5 ms dwell on screen, DWELL CHECK
 * User: "in 5 ms I should receive 5k samples ... for 10 kHz I should see 50 cycles ... not distorted ...
   everything should be real, no fake, no fallback, 100 % real". Lab commit `ce7342e`.

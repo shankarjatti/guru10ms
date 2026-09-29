@@ -40,6 +40,8 @@ ap.add_argument("--restore", type=float, default=2.4e9, help="band to leave the 
 ap.add_argument("--applied-ppm", type=float, default=0.0,
                 help="clock correction the HackRF is already running with (its --ppm)")
 ap.add_argument("--save-ppm", default="", help="write the measured clock error (ppm) to this file")
+ap.add_argument("--set-live", action="store_true",
+                help="also send the measured clock error to the running HackRF (UDP 'ppm')")
 a = ap.parse_args()
 BANDS = [(float(f), float(g)) for f, g in (x.split(":") for x in a.bands.split(","))]
 NCH = 4
@@ -157,11 +159,14 @@ print("\nHackRF back to %.2f GHz: %s" % (a.restore / 1e9, tx("freq %d" % int(a.r
 P = [r["clock_ppm"] for r in rows if "clock_ppm" in r]
 if P:
     print("HackRF clock vs X310: %+.3f ppm (bands: %s)" % (np.mean(P), ", ".join("%+.3f" % p for p in P)))
-    if a.save_ppm and max(P) - min(P) < 0.2:
+    consistent = max(P) - min(P) < 0.2
+    if not consistent:
+        print("NOT used: the bands disagree by more than 0.2 ppm -- not a clock error")
+    if a.save_ppm and consistent:
         open(a.save_ppm, "w").write("%.4f\n" % np.mean(P))
-        print("saved to", a.save_ppm, "(run_hop.sh --burst starts the HackRF with it)")
-    elif a.save_ppm:
-        print("NOT saved: the bands disagree by more than 0.2 ppm -- not a clock error")
+        print("saved to", a.save_ppm)
+    if a.set_live and consistent:
+        print("HackRF correction now %s ppm: %s" % ("%+.4f" % np.mean(P), tx("ppm %.4f" % np.mean(P))))
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results",
                    "tone_freq_%s.json" % time.strftime("%Y%m%d_%H%M%S"))
 json.dump({"args": vars(a), "fs": fs, "rows": rows}, open(out, "w"), indent=1, default=str)
