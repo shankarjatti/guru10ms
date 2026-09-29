@@ -37,8 +37,9 @@ ap.add_argument("--secs", type=float, default=0.5)
 ap.add_argument("--dc-guard", type=float, default=1e3, help="ignore |f| below this when looking for the tone")
 ap.add_argument("--tx-control", default="127.0.0.1:5123")
 ap.add_argument("--restore", type=float, default=2.4e9, help="band to leave the HackRF on")
-ap.add_argument("--applied-ppm", type=float, default=0.0,
-                help="clock correction the HackRF is already running with (its --ppm)")
+ap.add_argument("--applied-ppm", type=float, default=None,
+                help="clock correction the HackRF runs with; default: ASK the running transmitter "
+                     "(UDP 'get') -- never assume it")
 ap.add_argument("--save-ppm", default="", help="write the measured clock error (ppm) to this file")
 ap.add_argument("--set-live", action="store_true",
                 help="also send the measured clock error to the running HackRF (UDP 'ppm')")
@@ -100,6 +101,13 @@ def capture():
     return buf
 
 
+if a.applied_ppm is None:
+    r = tx("get")
+    if not r.startswith("ok") or "ppm=" not in r:
+        raise SystemExit("the transmitter did not say which clock correction it runs with (%r); "
+                         "restart it with the current hackrf_tone_source.py" % r)
+    a.applied_ppm = float(r.split("ppm=")[1].split()[0])
+    print("transmitter says: %s" % r)
 rows = []
 print("tone sent at centre %+.1f kHz; looking outside +/- %.1f kHz of 0 Hz" % (a.offset / 1e3, a.dc_guard / 1e3))
 for f, gain in BANDS:

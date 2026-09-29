@@ -38,6 +38,16 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
 
+### 2026-09-29 17:25–17:35 — 87.75 cycles on the user's screen = my bug; bottom line simplified
+* User's run: tone 17,549 Hz = 87.75 cycles; screen said clock "now −3.271 ppm (−6.417 at start)". Cause (mine): I had
+  restarted the HackRF by hand with `--ppm 0`; `run_hop` kept it, and its start-up measurement ASSUMED the correction in
+  `hackrf_ppm.txt` (−3.374) was active → computed −6.417, applied it → over-corrected. Receiver measured it correctly.
+* Fix (lab `9f8d77e`): transmitter answers UDP `get` (its real correction); `tone_freq_check` asks it (refuses if it
+  can't); run_hop restarts an older transmitter ('v2'); screen asks the transmitter each second.
+* User: "no paragraph — just total samples received and number of dwells, updating; I divide them". Bottom line is now
+  only `SAMPLES RECEIVED: n   DWELLS: m` (meter counters, every dwell of every band, 10×/s).
+* Not yet verified on the radio (user's old guru_burst was running).
+
 ### 2026-09-29 17:05–17:20 — live sample counts; HackRF unplugged; CLKIN not in effect yet
 * DWELL CHECK now live (10×/s): dwell number, samples counted between its marks + min/max of last 200, the radio's
   own burst count (5,250 = 250 pre-roll + 5,000) with its X310 time stamp, cycles COUNTED from the signal's rotation.

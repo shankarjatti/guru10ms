@@ -398,7 +398,7 @@ def control_server(state, host, port, stop):
     srv.bind((host, port))
     srv.settimeout(0.3)
     print(f"  control socket: udp://{host}:{port}   "
-          f"(commands: 'freq <hz>', 'vga <dB>', 'ppm <clock error>', 'ping', 'quit')")
+          f"(commands: 'freq <hz>', 'vga <dB>', 'ppm <clock error>', 'get', 'ping', 'quit')")
     while not stop.is_set():
         try:
             data, peer = srv.recvfrom(256)
@@ -421,6 +421,12 @@ def control_server(state, host, port, stop):
                 print(f"    -> retuned to {actual/1e9:.4f} GHz  "
                       f"(vga {tb.a.vga}, tone {tb._mapped_offset(actual)/1e3:+.1f} kHz, "
                       f"generated {tb._tone_offset(actual)/1e3:+.3f} kHz for {tb.a.ppm:+.3f} ppm)")
+            elif cmd[0] == "get":
+                # what the transmitter is really doing now -- a measurement must
+                # use this, never assume the correction from a file
+                srv.sendto(("ok freq=%.0f offset=%.3f ppm=%.4f vga=%d generated=%.3f"
+                            % (tb.get_freq(), tb._mapped_offset(tb.get_freq()), tb.a.ppm, tb.a.vga,
+                               tb._tone_offset(tb.get_freq()))).encode(), peer)
             elif cmd[0] == "ppm":
                 srv.sendto(f"ok {tb.set_ppm(cmd[1]):+.4f}".encode(), peer)
                 print(f"    -> clock correction {tb.a.ppm:+.4f} ppm: generating "
