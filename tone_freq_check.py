@@ -37,6 +37,9 @@ ap.add_argument("--secs", type=float, default=0.5)
 ap.add_argument("--dc-guard", type=float, default=1e3, help="ignore |f| below this when looking for the tone")
 ap.add_argument("--tx-control", default="127.0.0.1:5123")
 ap.add_argument("--restore", type=float, default=2.4e9, help="band to leave the HackRF on")
+ap.add_argument("--applied-ppm", type=float, default=0.0,
+                help="clock correction the HackRF is already running with (its --ppm)")
+ap.add_argument("--save-ppm", default="", help="write the measured clock error (ppm) to this file")
 a = ap.parse_args()
 BANDS = [(float(f), float(g)) for f, g in (x.split(":") for x in a.bands.split(","))]
 NCH = 4
@@ -140,12 +143,25 @@ for f, gain in BANDS:
         print("  ch%d  tone at %+9.1f Hz  %5.1f dB over noise | 0 Hz bin %5.1f dB | next line %+9.1f Hz %5.1f dB"
               % (ch, row["tone_hz"], row["tone_db"], dc, row["next_hz"], row["next_db"]))
         print("       lines: " + "  ".join("%+.0f Hz %.0f dB" % l for l in row["lines"]))
+    # The tone arrives upright (measured 2026-09-29: the HackRF's carrier leak
+    # sits exactly one offset below it), so tone - offset is the clock error
+    # left over after the correction the HackRF already applies.
     t = np.median([r["tone_hz"] for r in rows if r["band"] == f])
-    err = (abs(t) - a.offset) if abs(abs(t) - a.offset) < 200e3 else float("nan")
-    print("  -> tone at %+.1f Hz (%s side); vs the %.1f kHz sent: %+.1f Hz = %+.2f ppm of %.2f GHz;  LO locked %s"
-          % (t, "inverted" if t < 0 else "upright", a.offset / 1e3, err, err / f * 1e6, f / 1e9, locked))
+    err = t - a.offset
+    ppm = a.applied_ppm + err / f * 1e6
+    rows[-1]["clock_ppm"] = ppm
+    print("  -> tone at %+.1f Hz, %+.1f Hz from the %+.1f kHz asked for: HackRF clock %+.3f ppm "
+          "vs the X310;  LO locked %s" % (t, err, a.offset / 1e3, ppm, locked))
 
 print("\nHackRF back to %.2f GHz: %s" % (a.restore / 1e9, tx("freq %d" % int(a.restore)).strip()))
+P = [r["clock_ppm"] for r in rows if "clock_ppm" in r]
+if P:
+    print("HackRF clock vs X310: %+.3f ppm (bands: %s)" % (np.mean(P), ", ".join("%+.3f" % p for p in P)))
+    if a.save_ppm and max(P) - min(P) < 0.2:
+        open(a.save_ppm, "w").write("%.4f\n" % np.mean(P))
+        print("saved to", a.save_ppm, "(run_hop.sh --burst starts the HackRF with it)")
+    elif a.save_ppm:
+        print("NOT saved: the bands disagree by more than 0.2 ppm -- not a clock error")
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results",
                    "tone_freq_%s.json" % time.strftime("%Y%m%d_%H%M%S"))
 json.dump({"args": vars(a), "fs": fs, "rows": rows}, open(out, "w"), indent=1, default=str)

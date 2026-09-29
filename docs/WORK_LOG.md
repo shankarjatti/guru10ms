@@ -21,7 +21,7 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | user: enable real-time priority (`sudo` rtprio line, log out/in), then 30-min GUI run of `./run_hop.sh --burst` (target 0 late); guru_burst lives in `~/radar2/guru` (commit `03f222b`) |
+| Next step | user: log out/in (rtprio 95 file is in place) + `sudo cpupower frequency-set -g performance`, run `cd ~/radar2/guru && ./run_hop.sh --burst`, CALIBRATE. For exactly 50.00 cycles: cable X310 REF OUT → HackRF CLKIN |
 
 ---
 
@@ -37,6 +37,25 @@ decisions taken, and what comes next. Only measured facts; anything not verified
   interrupted): tap stderr and count TIMEOUT warnings per second; ≥ 3/s for 2 s → restart the stream.
 * Earlier run 17:18–18:03 (from its log): 135,007 slots, 134,992 used, **15 late** (worst send
   19.6 ms > 13 ms limit), 0 unlocked, 0 skipped, 0 overflow, rtprio off.
+
+### 2026-09-29 13:10–13:40 — 10 kHz tone in burst mode: whole 5 ms dwell on screen, DWELL CHECK
+* User: "in 5 ms I should receive 5k samples ... for 10 kHz I should see 50 cycles ... not distorted ...
+  everything should be real, no fake, no fallback, 100 % real". Lab commit `ce7342e`.
+* User's run 13:05 (guru_burst, 200 kHz): 131/2,995 late. Their process had **Max realtime priority 0**
+  (the rtprio file exists; needs a new login) — all 89 threads normal priority.
+* Measured: receiver 0 Hz leakage is only **13–16 dB below the tone** in every dwell (engine DC correction on).
+  With a 10 kHz tone it must be removed per dwell (synthetic test: without it phase −175° for 25° true).
+  Added: meter `remove_dc`, `hop_band_select remove_dc`, new `hop_dc_remove` (one-dwell delay; tested:
+  tone amplitude exactly constant, tags on exact samples). Meter reports per dwell samples / tone Hz / cycles.
+* HackRF clock vs X310: −4.894 ppm at 13:24 (3 bands within 0.011 ppm), `--ppm` correction added — but it
+  **drifts**: tone seen at 9,177 … 10,828 Hz during the session → **45.9 … 54.1 cycles per 5 ms**. Not forced
+  to 50 by any loop (that would be fake). Exactly 50.00 needs **X310 REF OUT → HackRF CLKIN**.
+* CALIBRATE at 10 kHz first REJECTED (5.2 GHz 20/111 windows no tone): HackRF sends from a ~1 s buffer, so after
+  a retune the old baseband continues ~1.2 s. Calibrator now waits for 5 dwells in a row with the tone (≤ 3 s).
+* Result, full GUI program on the radio (offscreen), `results/gui_burst10k_tab0_20260929_1337.png`:
+  every dwell **exactly 5,000 samples**, bursts 2,629/2,629, **CAL OK, phases +0.013 / −0.014 / +0.001°**,
+  one whole dwell = clean sine on 4 channels, ~52 cycles (tone 10,347.6 Hz), Switching tab flat; 1 late in 2,343
+  (no rtprio).
 
 ### 2026-09-29 12:25–13:05 — HackRF fix done; burst mode 5 ms ON / 7 ms switching built and measured
 * **HackRF watchdog** (`hackrf_tone_source.py`, lab commit `069cdba`): GR 3.10 prints the Soapy TIMEOUT

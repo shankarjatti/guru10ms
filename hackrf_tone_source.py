@@ -126,7 +126,7 @@ class ToneTX(gr.top_block):
             self.sink.set_bb_gain(0, 0)
             self.sink.set_antenna("TX/RX", 0)
         self.src = analog.sig_source_c(args.rate, analog.GR_COS_WAVE,
-                                       args.offset, args.amplitude)
+                                       self._tone_offset(args.freq), args.amplitude)
         # When the Soapy stream stalls the sink stops consuming, back-pressure
         # halts the source, and this rate collapses -- which is how the
         # watchdog notices. The sink itself keeps accepting control commands
@@ -144,16 +144,31 @@ class ToneTX(gr.top_block):
             return self.a.offset
         return min(self.a.offset_map, key=lambda kv: abs(kv[0] - freq))[1]
 
+    def _tone_offset(self, freq):
+        """What to generate so the tone ARRIVES at centre + offset.
+
+        This radio's clock runs a.ppm off the receiver's; at RF that shifts
+        everything by ppm * freq (-4.5 ppm = -10.9 kHz at 2.4 GHz, measured
+        2026-09-29), more than a small offset itself. Generating
+        offset - ppm * freq puts the tone where it was asked for.
+        """
+        return self._mapped_offset(freq) - self.a.ppm * 1e-6 * float(freq)
+
     def set_offset(self, off):
         """Move the tone within the band, without retuning the radio."""
         self.a.offset = float(off)
-        self.src.set_frequency(float(off))
+        self.src.set_frequency(self._tone_offset(self.get_freq()))
         return self.a.offset
+
+    def set_ppm(self, ppm):
+        """Clock-error correction, applied at once (no retune)."""
+        self.a.ppm = float(ppm)
+        self.src.set_frequency(self._tone_offset(self.get_freq()))
+        return self.a.ppm
 
     def retune(self, freq):
         freq = float(freq)
-        if self.a.offset_map:
-            self.set_offset(self._mapped_offset(freq))
+        self.src.set_frequency(self._tone_offset(freq))
         if self.radio == "b210" or self.backend == "osmosdr":
             self.sink.set_center_freq(freq, 0)
             if self.a.vga_map:
@@ -375,7 +390,7 @@ def control_server(state, host, port, stop):
     srv.bind((host, port))
     srv.settimeout(0.3)
     print(f"  control socket: udp://{host}:{port}   "
-          f"(commands: 'freq <hz>', 'vga <dB>', 'quit')")
+          f"(commands: 'freq <hz>', 'vga <dB>', 'ppm <clock error>', 'ping', 'quit')")
     while not stop.is_set():
         try:
             data, peer = srv.recvfrom(256)
@@ -396,7 +411,12 @@ def control_server(state, host, port, stop):
                 actual = tb.retune(cmd[1])
                 srv.sendto(f"ok {actual:.0f}".encode(), peer)
                 print(f"    -> retuned to {actual/1e9:.4f} GHz  "
-                      f"(vga {tb.a.vga}, tone {tb.a.offset/1e3:+.0f} kHz)")
+                      f"(vga {tb.a.vga}, tone {tb._mapped_offset(actual)/1e3:+.1f} kHz, "
+                      f"generated {tb._tone_offset(actual)/1e3:+.3f} kHz for {tb.a.ppm:+.3f} ppm)")
+            elif cmd[0] == "ppm":
+                srv.sendto(f"ok {tb.set_ppm(cmd[1]):+.4f}".encode(), peer)
+                print(f"    -> clock correction {tb.a.ppm:+.4f} ppm: generating "
+                      f"{tb._tone_offset(tb.get_freq())/1e3:+.3f} kHz")
             elif cmd[0] == "vga":
                 srv.sendto(f"ok {tb.set_vga(cmd[1])}".encode(), peer)
             elif cmd[0] == "ping":
@@ -448,6 +468,9 @@ def main():
                         "at 1 Msps the SoapySDR stream throws continuous "
                         "TIMEOUTs. It need not match the receiver -- the tone "
                         "sits at centre+offset either way.")
+    p.add_argument("--ppm", type=float, default=0.0,
+                   help="this radio's clock error vs the receiver, ppm (measure it with "
+                        "tone_freq_check.py); the tone is generated so it ARRIVES at centre + offset")
     p.add_argument("--vga", type=int, default=16,
                    help="TX VGA gain 0..47 dB (start low)")
     p.add_argument("--amp", action="store_true",
@@ -497,7 +520,9 @@ def main():
           " CW calibration source")
     print("=" * 66)
     print(f"  centre       : {a.freq/1e9:.4f} GHz")
-    print(f"  tone         : centre + {a.offset/1e3:.1f} kHz")
+    print(f"  tone         : centre + {a.offset/1e3:.1f} kHz"
+          + (f"   (clock correction {a.ppm:+.3f} ppm: generated {a.offset/1e3 - a.ppm*1e-9*a.freq:+.3f} kHz here)"
+             if a.ppm else ""))
     print(f"  sample rate  : {a.rate/1e6:.3f} Msps")
     if a.radio == "b210":
         print(f"  TX gain      : {a.vga} dB   of 0..{GAIN_MAX['b210']:.0f}")
