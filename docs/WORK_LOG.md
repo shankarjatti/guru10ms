@@ -21,11 +21,38 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Next step | user: log out/in (rtprio) → 30-min run of `./run_hop.sh --burst` with CALIBRATE; optional REF OUT → CLKIN cable (removes HackRF drift) |
+| Setup now (2026-09-30) | back to CABLE (HackRF → splitter → 4 ch); installed blocks = guru57; over-the-air work paused in `~/radar2/guru_ota` |
+| Next step | user: `cd ~/radar2/guru && ./run_hop.sh --burst` + CALIBRATE; long run (> 11 min) to prove the 2 MS/s fix; rtprio needs log out/in |
 
 ---
 
 ## 2026-09-28
+
+### 2026-09-30 12:18 — back to the CABLE setup; guru57 blocks restored
+* User: "that antenna test we ll come latter.... we ll come back to old setup using cable connection".
+* `~/radar2/guru57/RESTORE.sh` run: installed blocks in `~/gnuradio-3.8` = guru57 exactly (`--check`),
+  all 421 files of guru57 intact (`--verify`). The OTA blocks that were installed are saved in
+  `~/radar2/pre_restore_20260930_121829/`.
+* `~/radar2/guru` = guru57 (same blocks, `guru_burst.py`, `run_hop.sh`, byte-compared).
+* User re-connects HackRF → splitter → 4 channels. Run: `cd ~/radar2/guru && ./run_hop.sh --burst`, then CALIBRATE.
+
+### 2026-09-29 evening — over-the-air test (paused), in the copy `~/radar2/guru_ota` only
+* HackRF antenna → 4 antennas on the 2945 (same PC, UDP control). guru57 / guru untouched.
+* Found: a fan made a 70 Hz phase wobble (±3°) — seen in the phase spectrum; fan off removes it.
+* Found: 5.2 GHz Wi-Fi bursts pulled the whole-band phase estimate (up to 175°) → in guru_ota the meter takes
+  the phase only at the tone's own bins (±2 bins). Spread at 5.2 GHz 19–44° → ~7°.
+* 5.2 GHz RX gain 60 → 70 dB in guru_ota (no overload).
+* Measured: continuous 2 s, nothing moving: phase spread 0.44–0.87°. Hopping: 10,000 samples/dwell, 476/476 dwells
+  with the tone, 0 unlocked; but dwell-to-dwell jitter 2.3–3.1° (**unexplained, open**) and ~40°/17 s slow wander
+  (movement near the antennas). CALIBRATE rejects over the air (cable rule 0.3°).
+* guru_ota commits `ec124fe`, `bb4cb81`; `ota_check.py` = RX-only over-the-air check.
+
+### 2026-09-29 — guru57 frozen copy; 2 MS/s long-run fix
+* User: "its working good and save this work properly take copy name it as guru57".
+* `~/radar2/guru57`: own git (`1d267be`), 421 files, SHA256SUMS, `installed_snapshot/`, RESTORE.sh, `guru57.tar.gz`;
+  lab tag `guru57` = `b3673fb`.
+* TIMING LOST after 11 min at 2 MS/s (host ring full: all Python blocks share one core) → each meter processes
+  only its own band, no DC remover at 200 kHz (`1c7fe33`). Long run (> 11 min) after this fix: **not yet proven**.
 
 ### 2026-09-28 20:00 — run of guru10ms; HackRF stalled; watchdog blind to it
 * User ran `~/radar2/guru10ms/run_hop.sh --fast --restart` (my background start exited without a message;
