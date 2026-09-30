@@ -21,13 +21,24 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
-| Saved state | `~/radar2/guru0930` (frozen 2026-09-30, lab tag `guru0930`) — base for the next step |
+| Saved state | DF: `~/radar2/guru_DF_v1`, MON: `~/radar2/guru_MON_v1` (both frozen 2026-09-30); earlier `~/radar2/guru0930` (frozen 2026-09-30, lab tag `guru0930`) — base for the next step |
 | Setup now (2026-09-30) | back to CABLE (HackRF → splitter → 4 ch); installed blocks = guru57; over-the-air work paused in `~/radar2/guru_ota` |
 | Next step | user: `cd ~/radar2/guru && ./run_hop.sh --burst` + CALIBRATE; long run (> 11 min) to prove the 2 MS/s fix; rtprio needs log out/in |
 
 ---
 
 ## 2026-09-28
+
+### 2026-09-30 15:45 — both works saved separately: `guru_DF_v1` and `guru_MON_v1`
+* User: "keep both work separate and safe ... with other name ... after that we'll come to combining with switching".
+* `~/radar2/guru_DF_v1` (git `b579304`, 449 files, `RESTORE.sh --verify/--check` OK, lab tag `guru_DF_v1` = `d9c5f78`,
+  `guru_DF_v1.tar.gz` 245 MB): guru0930 + HackRF re-exec fix + 3-packet X310 ping. Needs CALIBRATE (X310 power-cycled).
+* `~/radar2/guru_MON_v1` (git `6e975ff`, 15 files, `guru_MON_v1.tar.gz` 186 kB): MON only, standalone (stock gr-uhd,
+  embedded meter, no installed doa blocks); block templates in `templates/`; regenerates the same flowgraph.
+* ch0 port check (MON mode, same freq/gain): ch0 A/RX1 13–16 dB low on all 4 bands, others within ~3 dB → RF path
+  of ch0, not LO sharing. Open: swap ch0/ch1 cables.
+* User asked about "apk" for switching — unclear (API vs Android app); answered both. Next: MON↔DF switching plan
+  (step 1 = switch_check.py measurement), only after the user's go.
 
 ### 2026-09-30 15:12 — MON step 1 (guru_mon): 4 LOs, own band each — WORKS on the cable
 * Built in `~/radar2/guru_mon` (clone of guru0930; `d98421c`, `ad333a8`): `make_guru_mon.py` → `guru_mon.grc/.py`,
