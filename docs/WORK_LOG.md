@@ -29,6 +29,27 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 15:12 — MON step 1 (guru_mon): 4 LOs, own band each — WORKS on the cable
+* Built in `~/radar2/guru_mon` (clone of guru0930; `d98421c`, `ad333a8`): `make_guru_mon.py` → `guru_mon.grc/.py`,
+  `mon_tools.py`, embedded MON meter; `./run_hop.sh --mon`. Per LO: spectrum, time graph (I/Q), gain, frequency,
+  status line (own `lo_locked`, every sample counted, stream breaks via rx_time tags, strongest line, ADC peak).
+  MON setup at start, in order: export off → all LOs internal → tune each twice (TwinRX keeps the last routing).
+* Blocked first: X310 was powered off (enp3s0 NO-CARRIER); HackRF had been replugged and its watchdog retried
+  1843× in-process → fix: after 3 failed restarts it re-execs itself on the last band (lab `d9c5f78`).
+* Measured (HackRF stepped 900 MHz → 2.4 → 5.2 → 5.8 GHz, 2 MS/s, gains 40/46/60/69):
+
+| HackRF on | ch0 900 MHz | ch1 2.4 GHz | ch2 5.2 GHz | ch3 5.8 GHz |
+|---|---|---|---|---|
+| 900 MHz | **TONE +197.0 kHz 66.6 dB** | noise 12.0 | noise 11.5 | noise 11.6 |
+| 2.4 GHz | 29.5 dB at the same +191.7 kHz | **TONE 83.4 dB** | noise 12.6 | noise 11.8 |
+| 5.2 GHz | noise 12.1 | noise 12.5 | **TONE 80.1 dB** | 23.0 dB at the same +182.1 kHz |
+| 5.8 GHz | noise 11.4 | noise 11.6 | 25 dB at +181.6 kHz (15:12) | **TONE 77.3–80.1 dB** |
+
+  All 4 LOCKED all the time; each ~2.00 MS/s (counted); 1 stream break (at start, not growing); ADC peak ≤ 0.21.
+* Finding: the other channel on the SAME TwinRX board sees the tone ~54–57 dB below, at the identical baseband
+  offset (crosstalk after down-conversion, within a board); the other board shows nothing (> ~65 dB).
+* X310 was power-cycled → DF phase table is invalid; CALIBRATE on the next DF run.
+
 ### 2026-09-30 13:30 — the user's whole work plan (discussion only, no code) — step by step
 * User: "we continuously monitor all frequencies ... edge computing modules [find their] band ... send request for DOA
   ... based on the requests we make a schedule and find the target ... after that again move to monitoring".

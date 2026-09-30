@@ -363,6 +363,25 @@ def watchdog(make_tb, state, stop, expected_rate, tap=None):
                 except Exception as e:
                     print("[watchdog] restart attempt %d failed: %s -- NOT TRANSMITTING, "
                           "retrying in 3 s" % (attempt, e))
+                    if attempt >= 3:
+                        # A replugged HackRF comes back as a new USB device, but
+                        # this process's libusb/libhackrf state still points at
+                        # the old one: every in-process retry fails "No such
+                        # device" forever (2026-09-30: 1843 attempts). Start the
+                        # program again as a fresh process, on the band last
+                        # asked for; it keeps retrying the same way.
+                        argv = [x for x in sys.argv]
+                        if "--freq" in argv:
+                            i = argv.index("--freq")
+                            del argv[i:i + 2]
+                        argv += ["--freq", "%.0f" % state["freq"]]
+                        print("[watchdog] %d restarts failed in this process -- starting it again "
+                              "as a new process on %.4f GHz" % (attempt, state["freq"] / 1e9), flush=True)
+                        time.sleep(3.0)
+                        if tap is not None:
+                            tap.close()         # real stdout/stderr back, or the new
+                                                # process writes into a dead pipe
+                        os.execv(sys.executable, [sys.executable] + argv)
                     time.sleep(3.0)
             bad = 0
             time.sleep(8.0)
