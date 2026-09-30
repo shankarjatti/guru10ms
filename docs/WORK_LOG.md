@@ -29,6 +29,11 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 18:20 — user ran guru_switch: "ITS WORKING SUPER"
+* User started `cd ~/radar2/guru_switch && ./run_hop.sh --switch` with the run instructions (CALIBRATE in DF,
+  MODE selector manual only, MON tab, LAB TONE selector) and confirmed it works.
+* Not yet frozen as a safe copy (guru_switch is the work copy, last commit a2a0140 + message fix).
+
 ### 2026-09-30 17:00–18:10 — switching steps 3–5: GUI, API, validation; user: MON continuous, manual mode only
 * `guru_switch.grc/.py` (`make_guru_switch.py`): guru_burst's DF flowgraph unchanged on outputs 0-3 + MON tab
   (per LO spectrum / time / status) on 4-7 + MODE selector above the tabs. `./run_hop.sh --switch`.
