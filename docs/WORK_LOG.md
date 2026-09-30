@@ -29,6 +29,24 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 16:05–16:17 — switching step 1 (`guru_switch/switch_check.py`): DF phase SURVIVES a trip through MON
+* `~/radar2/guru_switch` = working copy of guru_DF_v1 + guru_MON_v1 (`59d2ed4`); frozen copies untouched.
+* First trial tuned UNTIMED → phases after any retune jumped by exact multiples of 90° (also in the DF-only
+  baseline) = the TwinRX LO divider state. Test-script error; fixed by using the engine's tune exactly
+  (gains at T, ch c at T + c·0.4 ms, second pass at T + 3 ms, DDC policy NONE; lock read after the second pass).
+* Full run (`results/switch_check_20260930_161434.json`): per DF band 50 MON trips (DF → MON with ch0..3 on
+  0.9/2.4/5.2/5.8 GHz, each own LO, 0.2 s → DF) interleaved with 50 DF-only retune baselines:
+  - phase change after a MON trip, worst of ch1/ch2/ch3: 2.4 GHz 0.33°, 5.2 GHz 0.20°, 5.8 GHz 0.22°
+    (baseline retune: 0.26°, 0.14°, 0.12°); extra caused by the switch ≈ 0.03–0.11° (mean), std ≤ 0.07°.
+  - MON set up correctly (all internal, all locked) 150/150; lock timeouts 0.
+  - LO routing change ~2 ms (host, worst 4.7 ms); lock confirmed 4–8 ms after the timed tune (radio clock;
+    includes the 3 ms second pass and sensor reads). Tune lead 30 ms was a choice, not a limit.
+* Caveats: `lo_locked` on external channels (ch0/ch1 in DF) reports their own synth, so it proves nothing
+  there — the phase + SNR are the proof. Between program starts the reference phase of ch2 came up 180° apart
+  (+27.7° vs −152.8° at 2.4 GHz) → the start state is ambiguous: calibrate at every start (already the rule);
+  within one run it is stable. MON-mode reception during the trips was not checked (only routing + locks).
+* Conclusion: switching needs NO recalibration on return to DF (with the engine's tune). Next: step 2 (engine).
+
 ### 2026-09-30 15:45 — both works saved separately: `guru_DF_v1` and `guru_MON_v1`
 * User: "keep both work separate and safe ... with other name ... after that we'll come to combining with switching".
 * `~/radar2/guru_DF_v1` (git `b579304`, 449 files, `RESTORE.sh --verify/--check` OK, lab tag `guru_DF_v1` = `d9c5f78`,
