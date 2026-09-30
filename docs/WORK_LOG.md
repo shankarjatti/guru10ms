@@ -29,6 +29,28 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 16:20–16:45 — switching steps 2 (engine) done, headless-verified on the radio
+* `guru_switch/oot/engine/twinrx_engine.cpp` → `libtwinrx_switch.so` (separate lib; installed engine untouched):
+  MON = one more band, own freq per channel, own internal LOs; mode request taken at the next planned slot;
+  consecutive MON slots not retuned → MON bursts join with no gap. `switch_source.py` (local block, 8 outputs:
+  0-3 DF with the old tags, 4-7 MON with mon_on / mon_bad / mon_off).
+* Measured facts found on the way (route_burst_test.py):
+  - timed LO routing takes effect at T (ch0 tone gone +0.12 ms after T, never before), phase back ≤ 0.16°;
+  - BUT in the running engine a TIMED routing call blocks the host until T (each call reads the TwinRX back and
+    the read waits behind the timed write) → tune after it went out late (all 10 switch slots late, send 30–45 ms).
+    Fix: after the old mode's last dwell has ENDED, route UNTIMED (0.6–2.9 ms), then the timed tune at
+    end + switch_gap (10 ms);
+  - 200 burst commands at once overflow the radio's command queue (only 32 ran); the engine queues one ahead.
+* Headless check (`switch_engine_check.py`, 5 cycles DF 2 s / MON 2 s, tone on 2.4 GHz):
+  1558/1558 slots used, 0 late/unlocked/skipped, bursts 1557 ok / 0 missing, 10/10 switches locked;
+  DF phase after each return from MON ≤ 0.26° (single-dwell std 0.06/0.11/0.09°); every DF dwell 10,000 samples,
+  every MON dwell 40,000 (20 ms); MON: only ch1 (2.4 GHz) sees the tone (84.8 dB), ch0 34 dB board-mate leak,
+  ch2/ch3 noise; request → first dwell of the new mode: DF→MON 24–33 ms, MON→DF 39–48 ms.
+* One earlier run had 165 late DF slots with the same code (band change 4 ms instead of 1.1): a kernel worker at
+  62–67 % CPU (D state), rustdesk, CPU governor `powersave`. DF-only and the next run: 0 late. PC latency, not the
+  design — the performance governor needs the user (system setting).
+* Next: control API + GUI (steps 3–4), then validation (step 5).
+
 ### 2026-09-30 16:05–16:17 — switching step 1 (`guru_switch/switch_check.py`): DF phase SURVIVES a trip through MON
 * `~/radar2/guru_switch` = working copy of guru_DF_v1 + guru_MON_v1 (`59d2ed4`); frozen copies untouched.
 * First trial tuned UNTIMED → phases after any retune jumped by exact multiples of 90° (also in the DF-only
