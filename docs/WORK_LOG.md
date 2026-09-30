@@ -28,6 +28,14 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 12:25–12:35 — "not getting signal from ch2" → ch2 RF input nearly disconnected (cable)
+* Measured with guru57's own `tone_freq_check.py` (guru57 blocks installed, no trim, 2 MS/s, 200 kHz tone):
+  tone over noise ch0/ch1/ch2/ch3 = 2.4 GHz 88.8/99.2/**66.5**/99.0 dB; 5.2 GHz 91.2/97.9/**76.9**/97.0; 5.8 GHz 92.8/97.5/**77.5**/97.5.
+  Yesterday (cable, same tool): ch2 equal to ch1/ch3. LO locked on every band; ch2 phase still steady (0.05–0.2°).
+* Conclusion: not software — ch2 (Rx B RX1) gets only leakage; ch0 also 5–10 dB lower than yesterday.
+  Asked the user to reseat/tighten ch2 and ch0 SMAs (2945 + divider), swap ch2/ch3 cables if still weak.
+* Waiting for the user; then re-measure and run guru_burst.
+
 ### 2026-09-30 12:18 — back to the CABLE setup; guru57 blocks restored
 * User: "that antenna test we ll come latter.... we ll come back to old setup using cable connection".
 * `~/radar2/guru57/RESTORE.sh` run: installed blocks in `~/gnuradio-3.8` = guru57 exactly (`--check`),
