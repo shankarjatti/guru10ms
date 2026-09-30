@@ -29,6 +29,17 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 18:12–18:42 — 30-min run of guru_switch: PASSED (no failure)
+* User: "keep monitoring, we'll run it for 30 min; if it fails we'll check root cause". Watched every minute.
+* CALIBRATE OK 18:10:15 (worst single window 0.06°). User switched MON/DF by hand 7 times (last: MON at ~18:31).
+* 30 min: guru_switch running all the time, TIMING LOST 0, tracebacks 0; HackRF: 0 new TIMEOUTs, 0 watchdog
+  restarts (after the fresh-process fix + fresh start).
+* DF 2.4 GHz (18:13–18:32, in DF): tone +192.6..193.1 kHz, 10,000 samples per dwell every time, phases after CAL
+  ch1 +0.05..+0.13°, ch2 +0.28..+0.52°, ch3 +0.26..+0.52° (slow drift ~0.2° over 20 min, max dev ≤ 0.08°).
+  From 18:32 the program is in MON, so the DF meter holds its last value (expected).
+* First run of the 2 MS/s DF chain past 11 min without TIMING LOST since the 09-29/09-30 failures (6 and 11 min);
+  that earlier one coincided with me building a tarball — load matters, not proven fixed.
+
 ### 2026-09-30 18:08 — "not getting correct signal": HackRF stalled again (not the receiver)
 * guru_switch log: every meter "no tone"; receiver healthy (locked, 0 missing, no TIMING LOST). HackRF log: 7046
   TIMEOUTs, watchdog restarting every ~1 s, each restart stalling again. HackRF USB device number 006 → 009 → 013
