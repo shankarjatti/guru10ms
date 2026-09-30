@@ -29,6 +29,30 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 17:00–18:10 — switching steps 3–5: GUI, API, validation; user: MON continuous, manual mode only
+* `guru_switch.grc/.py` (`make_guru_switch.py`): guru_burst's DF flowgraph unchanged on outputs 0-3 + MON tab
+  (per LO spectrum / time / status) on 4-7 + MODE selector above the tabs. `./run_hop.sh --switch`.
+* First GUI start: TIMING LOST at once — the Python MON meter (all 4 MON streams through Python) + 8 displays
+  on top of the DF chain. Fix: MON path C++ only (probe snapshots of 8192 samples, displays thinned to whole
+  4096-sample blocks, MON count from the engine). Then no TIMING LOST.
+* Bugs found and fixed: MON band-stats key "MON" (string) broke the DF lock line; a repeated request (GUI
+  selector following an API request) moved the request time.
+* Validation (`switch_validate.py`, GUI + API, 151 switches over 566 s, then burst-mode MON):
+  150/151 switches locked + used (1 not used, marked), bursts 50,720 ok / 0 missing, no TIMING LOST; DF 2.4 GHz
+  phase over the whole run (guru's own meter): worst change 0.09 / 0.28 / 0.15°; request → first dwell:
+  to DF mean 46.6 ms (worst 56.3), to MON 27.8 ms (worst 33.5); routing 1.0 ms mean (worst 4.0);
+  555 / 50,722 slots late (1.1 %, marked, never used) = the PC's latency (see 16:20 entry).
+* User: "MON work should be in continuous mode now ... don't follow burst mode there" → MON = ONE continuous
+  stream (timed START_CONTINUOUS at the first MON sample; STOP at the switch back, the stream ends where it
+  ends, end-of-burst gives the exact last sample); engine keeps 20 ms MON records with a lock read. DF stays burst.
+* User: "don't set auto changing mode between MON and DF, that should be manually controlled" → the program never
+  switched by itself (the automatic switching seen was my validation script through the API); API now OFF by
+  default, mode only via the MODE selector.
+* Continuous MON headless (`switch_engine_check.py`, a TEST that switches): 10 cycles: 0 missing bursts, DF phase
+  after each return ≤ 0.27°, DF dwells 10,000; 1000 MON records locked; MON→DF now 20–29 ms, DF→MON 23–33 ms.
+  First continuous run had bursts missing 10 (= number of switches), NOT reproduced in 3 runs since — open.
+* GUI started for the user in DF (CALIBRATE first: the X310 was power-cycled).
+
 ### 2026-09-30 16:20–16:45 — switching steps 2 (engine) done, headless-verified on the radio
 * `guru_switch/oot/engine/twinrx_engine.cpp` → `libtwinrx_switch.so` (separate lib; installed engine untouched):
   MON = one more band, own freq per channel, own internal LOs; mode request taken at the next planned slot;
