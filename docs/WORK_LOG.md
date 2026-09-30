@@ -21,12 +21,20 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 | Run | `./run_hop.sh --fast`, then CALIBRATE; every 5–10 min for < 1° |
 | Radio | X310 `31082D8` at 192.168.10.2; HackRF tone on 2.4 GHz (UDP 127.0.0.1:5123) |
 | Open items | thermal drift (~8°/16 min); rtprio not enabled (limit 0); CPU governor = `powersave` (not yet tested as a cause of late slots); field calibration without HackRF; overflow recovery untested; RTOS choice |
+| Saved state | `~/radar2/guru0930` (frozen 2026-09-30, lab tag `guru0930`) — base for the next step |
 | Setup now (2026-09-30) | back to CABLE (HackRF → splitter → 4 ch); installed blocks = guru57; over-the-air work paused in `~/radar2/guru_ota` |
 | Next step | user: `cd ~/radar2/guru && ./run_hop.sh --burst` + CALIBRATE; long run (> 11 min) to prove the 2 MS/s fix; rtprio needs log out/in |
 
 ---
 
 ## 2026-09-28
+
+### 2026-09-30 12:52 — work saved as `guru0930` (user: "save this work... i need to take it in to next big step")
+* `~/radar2/guru0930`: guru57 + today's fixes (`hackrf_tone_source.py`, `run_hop.sh`), all results, logs of today's run,
+  WORK_LOG; own git `99d7436`; 449 files in SHA256SUMS (`RESTORE.sh --verify` OK); installed blocks = this copy
+  (`--check` OK); `~/radar2/guru0930.tar.gz` (245 MB) + `.sha256`; lab tag `guru0930` = `d818647`.
+* guru57 left frozen: today's 4 `tone_freq_*.json` that had been written into guru57/results moved to guru/results
+  (guru57 git clean, 421 files intact).
 
 ### 2026-09-30 12:30–12:50 — cables fixed; HackRF stall; launcher bug; guru_burst running — user: "now its working correct"
 * After the user reseated the cables: ch2 level with ch1/ch3 on every band (2.4 GHz 94.4 / 95.1 / 94.8 dB; ch0 84.7 dB,
