@@ -28,6 +28,24 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 12:30–12:50 — cables fixed; HackRF stall; launcher bug; guru_burst running — user: "now its working correct"
+* After the user reseated the cables: ch2 level with ch1/ch3 on every band (2.4 GHz 94.4 / 95.1 / 94.8 dB; ch0 84.7 dB,
+  4–10 dB below the others — enough, but more than on 09-29).
+* First re-check showed no tone on any channel: the HackRF's transmit stream was stalling (USB TIMEOUT, 13 watchdog
+  restarts, each stalled again within ~1 s). Transmitter process restarted → 0 TIMEOUTs since.
+* Bug found in the log: a stall during 5.8 GHz came back "restarted on 2.4 GHz" — a 'freq' request arriving during
+  the restart went to the dead flowgraph. Fix (`hackrf_tone_source.py`): the band last asked for is kept, and the
+  restart and every UDP command share one lock. Lab commit `d818647`.
+* Raw radio-block capture (guru_burst settings, 2 MS/s, burst, rt 0 and rt 90): tone on all 4 channels 72–87 dB —
+  real-time priority 90 is now granted ('rt_priority': 'on') and does not change reception.
+* Launcher bug: `run_hop.sh` has `set -u`, `setup_env.sh` appends to `$LD_LIBRARY_PATH`; when that is unset bash stops
+  before the receiver starts (exit 1, no receiver log). Fix: `set +u` around the source (guru, guru10ms, guru_ota;
+  guru57 left frozen — same bug there if LD_LIBRARY_PATH is unset).
+* guru_burst on the cable (12:46): 2.4 GHz tone +192.3 kHz, 10,000 samples/dwell, ch1/ch2/ch3 +0.02/−0.02/−0.01°
+  (max dev 0.07°) with the stored table. 5.2/5.8 GHz still show the startup values (−64/−20/−101°, −45/+140/+30°) —
+  cables were reseated, so CALIBRATE is needed on those bands.
+* 15-min watch of the run started (covers the 11-min TIMING LOST problem).
+
 ### 2026-09-30 12:25–12:35 — "not getting signal from ch2" → ch2 RF input nearly disconnected (cable)
 * Measured with guru57's own `tone_freq_check.py` (guru57 blocks installed, no trim, 2 MS/s, 200 kHz tone):
   tone over noise ch0/ch1/ch2/ch3 = 2.4 GHz 88.8/99.2/**66.5**/99.0 dB; 5.2 GHz 91.2/97.9/**76.9**/97.0; 5.8 GHz 92.8/97.5/**77.5**/97.5.

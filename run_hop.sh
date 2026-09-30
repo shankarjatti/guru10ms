@@ -205,6 +205,10 @@ echo "[run] starting $RX"
 echo "[run] receiver log: $RXLOG    UHD log: $UHD_LOG_FILE"
 echo "[run] close the window (or Ctrl-C) to stop both."
 # shellcheck disable=SC1090
+# setup_env.sh appends to LD_LIBRARY_PATH/PYTHONPATH etc., which may be unset:
+# under set -u that stopped the script here, before the receiver started
+set +u
 source "$HOME/gnuradio-3.8/setup_env.sh" >/dev/null 2>&1
+set -u
 cd "$HERE" || exit 1
 python3 -u "$RX" 2>&1 | tee "$RXLOG"

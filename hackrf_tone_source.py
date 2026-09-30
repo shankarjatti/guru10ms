@@ -350,9 +350,13 @@ def watchdog(make_tb, state, stop, expected_rate, tap=None):
             while not stop.is_set():
                 attempt += 1
                 try:
-                    new = make_tb()
-                    new.start()
-                    state["tb"] = new
+                    # under the control lock: a 'freq' that arrives during the
+                    # restart must not land in the dead flowgraph and be lost
+                    # (2026-09-30: stalled during 5.8 GHz, came back on 2.4 GHz)
+                    with state["lock"]:
+                        new = make_tb()
+                        new.start()
+                        state["tb"] = new
                     print("[watchdog] transmitter restarted on %.4f GHz (attempt %d)"
                           % (new.get_freq() / 1e9, attempt))
                     break
@@ -408,6 +412,7 @@ def control_server(state, host, port, stop):
         if not cmd:
             continue
         try:
+          with state["lock"]:
             tb = state["tb"]
             if cmd[0] == "freq":
                 # Retuning is what makes the HackRF's Soapy stream stall, so a
@@ -416,6 +421,7 @@ def control_server(state, host, port, stop):
                     srv.sendto(f"ok {tb.get_freq():.0f}".encode(), peer)
                     print(f"    -> already on {tb.get_freq()/1e9:.4f} GHz, not retuned")
                     continue
+                state["freq"] = float(cmd[1])
                 actual = tb.retune(cmd[1])
                 srv.sendto(f"ok {actual:.0f}".encode(), peer)
                 print(f"    -> retuned to {actual/1e9:.4f} GHz  "
@@ -563,11 +569,13 @@ def main():
 
     # A restart replaces the flowgraph object, so everything reaches it
     # through this holder rather than capturing it once.
-    state = {"tb": tb}
+    # "freq" = the band last asked for; a restart comes back on it (the
+    # stalled flowgraph's own reading cannot be trusted for that)
+    state = {"tb": tb, "freq": tb.get_freq(), "lock": threading.Lock()}
 
     def _make():
         fresh = ToneTX(a)
-        fresh.retune(state["tb"].get_freq())     # come back on the same band
+        fresh.retune(state["freq"])              # come back on the band asked for
         return fresh
 
     threading.Thread(target=watchdog,
