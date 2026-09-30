@@ -29,6 +29,25 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 13:30 — the user's whole work plan (discussion only, no code) — step by step
+* User: "we continuously monitor all frequencies ... edge computing modules [find their] band ... send request for DOA
+  ... based on the requests we make a schedule and find the target ... after that again move to monitoring".
+  Scope is only BEFORE the USRP (Monitor mode, priority switching, USRP); DOA itself and everything after the USRP
+  are other people's work.
+* User: "this is my whole work plan, don't go directly for the full plan ... we'll do step by step".
+* Plan agreed as an outline only (each step starts only when the user says so):
+  0. measure: independent-LO retune time; LO mode-switch time; phase before/after a mode switch; scan speed
+  1. Monitor mode (engine scans a frequency list on the radio clock, real counters)
+  2. doa_request interface (frequency, priority, id, time; accepted/started/done)
+  3. scheduler (priority queue, max time away from monitoring, timeout)
+  4. DOA slot (mode switch if needed, coherent IQ + timestamps + calibration status)
+  5. back to monitoring; end-to-end test, request-to-DOA latency measured
+  6. robustness (CPU headroom; TIMING LOST after 6 min on 2026-09-30)
+* Open design choice: Monitor with independent LOs (≈4× scan coverage, but a mode switch → relock, maybe recalibration)
+  vs shared LO always (one freq at a time, calibration always valid, DOA from the next slot). Decide from step 0.
+* Open questions to the user: "all frequencies" = 10 MHz–6 GHz or a band list; request format/transport and owner;
+  DOA length per request; two requests at once; max time away from monitoring.
+
 ### 2026-09-30 12:52 — work saved as `guru0930` (user: "save this work... i need to take it in to next big step")
 * `~/radar2/guru0930`: guru57 + today's fixes (`hackrf_tone_source.py`, `run_hop.sh`), all results, logs of today's run,
   WORK_LOG; own git `99d7436`; 449 files in SHA256SUMS (`RESTORE.sh --verify` OK); installed blocks = this copy
