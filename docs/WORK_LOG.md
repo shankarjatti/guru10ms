@@ -29,6 +29,15 @@ decisions taken, and what comes next. Only measured facts; anything not verified
 
 ## 2026-09-28
 
+### 2026-09-30 18:08 — "not getting correct signal": HackRF stalled again (not the receiver)
+* guru_switch log: every meter "no tone"; receiver healthy (locked, 0 missing, no TIMING LOST). HackRF log: 7046
+  TIMEOUTs, watchdog restarting every ~1 s, each restart stalling again. HackRF USB device number 006 → 009 → 013
+  over the day = it dropped off USB and came back at least 3 times (cable / port / power).
+* Fix: 3 stalls within 60 s → the transmitter re-execs itself as a fresh process on the band last asked for
+  (lab commit; copied to guru_switch, guru_mon, guru10ms). Fresh transmitter: 0 TIMEOUTs; guru_switch 2.4 GHz
+  tone back (+192.8 kHz, 10,000 samples, phases +0.05/+0.14/+0.13°). 5.2/5.8 need CALIBRATE.
+* Recommended to the user: HackRF on another USB port / shorter cable / powered hub.
+
 ### 2026-09-30 18:20 — user ran guru_switch: "ITS WORKING SUPER"
 * User started `cd ~/radar2/guru_switch && ./run_hop.sh --switch` with the run instructions (CALIBRATE in DF,
   MODE selector manual only, MON tab, LAB TONE selector) and confirmed it works.
